@@ -1,37 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AppLayout from './components/common/AppLayout';
+import theme from './theme';
 
 // Pages
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
-
-// Création du thème de l'application
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-    background: {
-      default: '#f5f5f5',
-    },
-  },
-  typography: {
-    fontFamily: [
-      'Roboto',
-      'Arial',
-      'sans-serif',
-    ].join(','),
-  },
-});
 
 function App() {
   return (
@@ -60,6 +39,8 @@ function App() {
               <Route element={<AppLayout />}>
                 <Route path="/statistics" element={<div>Page de statistiques (à implémenter)</div>} />
                 <Route path="/users" element={<div>Page de gestion des utilisateurs (à implémenter)</div>} />
+                <Route path="/profile" element={<div>Page de profil (à implémenter)</div>} />
+                <Route path="/settings" element={<div>Page de paramètres (à implémenter)</div>} />
               </Route>
             </Route>
             

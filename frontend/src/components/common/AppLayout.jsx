@@ -17,7 +17,14 @@ import {
   Avatar,
   Menu,
   MenuItem,
-  Tooltip
+  Tooltip,
+  Badge,
+  Stack,
+  InputBase,
+  alpha,
+  Chip,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -27,16 +34,22 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SearchIcon from '@mui/icons-material/Search';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useAuth } from '../../context/AuthContext';
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
 const AppLayout = () => {
+  const theme = useTheme();
   const { user, logout, isManager } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const [anchorElNotifications, setAnchorElNotifications] = useState(null);
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -48,6 +61,14 @@ const AppLayout = () => {
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  const handleOpenNotifications = (event) => {
+    setAnchorElNotifications(event.currentTarget);
+  };
+
+  const handleCloseNotifications = () => {
+    setAnchorElNotifications(null);
   };
 
   const handleLogout = () => {
@@ -102,40 +123,129 @@ const AppLayout = () => {
   );
 
   const drawer = (
-    <div>
-      <Toolbar sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center',
-        py: 2
-      }}>
-        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
-          Gestion Commandes
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography variant="h5" component="div" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+          GESTION<span style={{ color: theme.palette.text.primary }}>COMMANDES</span>
         </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {user?.role === 'MANAGER' ? 'Manager' : 'Agent'}
-        </Typography>
-      </Toolbar>
+      </Box>
+      
       <Divider />
-      <List>
+      
+      <Box sx={{ p: 2 }}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: theme.palette.primary.light,
+            display: 'flex',
+            alignItems: 'center',
+            mb: 1
+          }}
+        >
+          <Avatar 
+            sx={{ 
+              width: 40, 
+              height: 40,
+              bgcolor: theme.palette.primary.main,
+              color: '#fff',
+              mr: 2
+            }}
+          >
+            {user?.first_name?.[0]}{user?.last_name?.[0]}
+          </Avatar>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme.palette.primary.dark }}>
+              {user?.first_name} {user?.last_name}
+            </Typography>
+            <Chip
+              label={user?.role === 'MANAGER' ? 'Manager' : 'Agent'}
+              size="small"
+              sx={{ 
+                bgcolor: user?.role === 'MANAGER' ? theme.palette.secondary.light : theme.palette.success.light,
+                color: user?.role === 'MANAGER' ? theme.palette.secondary.dark : theme.palette.success.dark,
+                fontWeight: 600,
+                fontSize: '0.7rem'
+              }}
+            />
+          </Box>
+        </Box>
+      </Box>
+      
+      <Divider sx={{ mb: 1 }} />
+      
+      <Typography variant="overline" sx={{ px: 3, py: 1, color: theme.palette.text.secondary }}>
+        MENU PRINCIPAL
+      </Typography>
+      
+      <List sx={{ px: 2, flex: 1 }}>
         {filteredMenuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
+          <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton 
               selected={location.pathname === item.path}
               onClick={() => {
                 navigate(item.path);
                 setMobileOpen(false);
               }}
+              sx={{ 
+                borderRadius: 2,
+                py: 1,
+                '&.Mui-selected': {
+                  bgcolor: theme.palette.primary.light,
+                  '&:hover': {
+                    bgcolor: theme.palette.primary.light,
+                  },
+                  '& .MuiListItemIcon-root': {
+                    color: theme.palette.primary.main,
+                  },
+                  '& .MuiListItemText-primary': {
+                    color: theme.palette.primary.main,
+                    fontWeight: 600,
+                  }
+                }
+              }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 40 }}>
                 {item.icon}
               </ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemText 
+                primary={item.text} 
+                primaryTypographyProps={{ 
+                  fontSize: '0.875rem', 
+                  fontWeight: location.pathname === item.path ? 600 : 500 
+                }} 
+              />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
-    </div>
+      
+      <Box sx={{ p: 2, mt: 'auto' }}>
+        <Divider sx={{ mb: 2 }} />
+        <ListItemButton 
+          onClick={handleLogout}
+          sx={{ 
+            borderRadius: 2,
+            bgcolor: theme.palette.error.light,
+            color: theme.palette.error.dark,
+            '&:hover': {
+              bgcolor: alpha(theme.palette.error.light, 0.8),
+            }
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40, color: theme.palette.error.dark }}>
+            <LogoutIcon />
+          </ListItemIcon>
+          <ListItemText 
+            primary="Déconnexion" 
+            primaryTypographyProps={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600 
+            }} 
+          />
+        </ListItemButton>
+      </Box>
+    </Box>
   );
 
   return (
@@ -143,9 +253,12 @@ const AppLayout = () => {
       <CssBaseline />
       <AppBar
         position="fixed"
+        elevation={0}
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
+          bgcolor: '#fff',
+          borderBottom: `1px solid ${theme.palette.divider}`
         }}
       >
         <Toolbar>
@@ -154,53 +267,193 @@ const AppLayout = () => {
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2, display: { sm: 'none' }, color: theme.palette.text.primary }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {filteredMenuItems.find(item => item.path === location.pathname)?.text || 'Tableau de bord'}
-          </Typography>
-          <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Ouvrir les paramètres">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt={`${user?.first_name} ${user?.last_name}`}>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+            <Typography 
+              variant="h6" 
+              noWrap 
+              component="div" 
+              sx={{ 
+                display: { xs: 'none', sm: 'block' }, 
+                color: theme.palette.text.primary,
+                fontWeight: 600
+              }}
+            >
+              {filteredMenuItems.find(item => item.path === location.pathname)?.text || 'Tableau de bord'}
+            </Typography>
+            
+            <Box sx={{ flexGrow: 1 }} />
+            
+            <Box 
+              sx={{ 
+                position: 'relative',
+                mr: 2,
+                display: { xs: 'none', md: 'flex' },
+                backgroundColor: theme.palette.grey[100],
+                borderRadius: 2,
+                p: '4px 8px',
+                width: 300
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                <SearchIcon sx={{ color: theme.palette.grey[500], mr: 1 }} />
+                <InputBase
+                  placeholder="Rechercher..."
+                  sx={{ 
+                    flex: 1,
+                    fontSize: '0.875rem',
+                    '& .MuiInputBase-input': {
+                      padding: '4px 0'
+                    }
+                  }}
+                />
+              </Box>
+            </Box>
+            
+            <Stack direction="row" spacing={1} alignItems="center">
+              <IconButton 
+                size="medium" 
+                color="inherit" 
+                sx={{ 
+                  bgcolor: theme.palette.grey[100],
+                  color: theme.palette.text.primary,
+                  '&:hover': {
+                    bgcolor: theme.palette.grey[200]
+                  }
+                }}
+                onClick={handleOpenNotifications}
+              >
+                <Badge badgeContent={4} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+              
+              <Menu
+                sx={{ mt: '45px' }}
+                id="menu-notifications"
+                anchorEl={anchorElNotifications}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorElNotifications)}
+                onClose={handleCloseNotifications}
+              >
+                <Typography sx={{ p: 2, fontWeight: 600 }}>Notifications</Typography>
+                <Divider />
+                <MenuItem onClick={handleCloseNotifications}>
+                  <Typography variant="body2">Nouvelle commande assignée</Typography>
+                </MenuItem>
+                <MenuItem onClick={handleCloseNotifications}>
+                  <Typography variant="body2">Commande en attente de contrôle</Typography>
+                </MenuItem>
+                <MenuItem onClick={handleCloseNotifications}>
+                  <Typography variant="body2">Commande prête pour emballage</Typography>
+                </MenuItem>
+                <MenuItem onClick={handleCloseNotifications}>
+                  <Typography variant="body2">Mise à jour du système</Typography>
+                </MenuItem>
+                <Divider />
+                <Box sx={{ p: 1, textAlign: 'center' }}>
+                  <Typography variant="body2" color="primary" sx={{ cursor: 'pointer' }}>
+                    Voir toutes les notifications
+                  </Typography>
+                </Box>
+              </Menu>
+              
+              <Box 
+                onClick={handleOpenUserMenu}
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  cursor: 'pointer',
+                  p: '4px 8px',
+                  borderRadius: 2,
+                  '&:hover': {
+                    bgcolor: theme.palette.grey[100]
+                  }
+                }}
+              >
+                <Avatar 
+                  sx={{ 
+                    width: 32, 
+                    height: 32,
+                    bgcolor: theme.palette.primary.main,
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    fontWeight: 600
+                  }}
+                >
                   {user?.first_name?.[0]}{user?.last_name?.[0]}
                 </Avatar>
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              <MenuItem disabled>
-                <Typography textAlign="center">
-                  {user?.first_name} {user?.last_name}
-                </Typography>
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout}>
-                <ListItemIcon>
-                  <LogoutIcon fontSize="small" />
-                </ListItemIcon>
-                <Typography textAlign="center">Déconnexion</Typography>
-              </MenuItem>
-            </Menu>
+                {!isMobile && (
+                  <>
+                    <Box sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                        {user?.first_name} {user?.last_name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {user?.role === 'MANAGER' ? 'Manager' : 'Agent'}
+                      </Typography>
+                    </Box>
+                    <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.5, color: theme.palette.grey[500] }} />
+                  </>
+                )}
+              </Box>
+              
+              <Menu
+                sx={{ mt: '45px' }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
+              >
+                <Box sx={{ px: 2, py: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    {user?.first_name} {user?.last_name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {user?.email || user?.username}
+                  </Typography>
+                </Box>
+                <Divider />
+                <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/profile'); }}>
+                  <Typography variant="body2">Mon profil</Typography>
+                </MenuItem>
+                <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/settings'); }}>
+                  <Typography variant="body2">Paramètres</Typography>
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutIcon fontSize="small" />
+                  </ListItemIcon>
+                  <Typography variant="body2">Déconnexion</Typography>
+                </MenuItem>
+              </Menu>
+            </Stack>
           </Box>
         </Toolbar>
       </AppBar>
+      
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
@@ -215,7 +468,11 @@ const AppLayout = () => {
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              boxShadow: 3
+            },
           }}
         >
           {drawer}
@@ -224,13 +481,19 @@ const AppLayout = () => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              borderRight: `1px solid ${theme.palette.divider}`,
+              boxShadow: 'none'
+            },
           }}
           open
         >
           {drawer}
         </Drawer>
       </Box>
+      
       <Box
         component="main"
         sx={{ 
@@ -238,7 +501,7 @@ const AppLayout = () => {
           p: 3, 
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           minHeight: '100vh',
-          backgroundColor: '#f5f5f5'
+          backgroundColor: theme.palette.background.default
         }}
       >
         <Toolbar />
