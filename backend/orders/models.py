@@ -15,6 +15,9 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='CREATED')
     cart_number = models.CharField(max_length=50, verbose_name="Numéro de chariot")
     
+    # Nombre de lignes (articles) dans la commande
+    line_count = models.PositiveIntegerField(null=True, blank=True, verbose_name="Nombre de lignes")
+    
     # User relationships
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_orders')
     preparer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='prepared_orders')

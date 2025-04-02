@@ -152,4 +152,8 @@ SIMPLE_JWT = {
 }
 
 # CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # URL du serveur de développement Vite
+]
+
 CORS_ALLOW_ALL_ORIGINS = True  # For development only, restrict in production

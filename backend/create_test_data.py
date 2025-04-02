@@ -103,11 +103,15 @@ def create_test_orders():
             packed_at = controlled_at + timedelta(minutes=random.randint(15, 45)) if status == 'PACKED' else None
             completed_at = packed_at if status == 'PACKED' else None
             
+            # Generate a random line_count for prepared, controlled, and packed orders
+            line_count = random.randint(1, 20) if status != 'CREATED' else None
+            
             # Create the order
             Order.objects.create(
                 reference=reference,
                 status=status,
                 cart_number=cart_number,
+                line_count=line_count,
                 creator=creator,
                 preparer=preparer,
                 controller=controller,

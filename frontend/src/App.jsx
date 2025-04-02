@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AppLayout from './components/common/AppLayout';
 import theme from './theme';
+import { runAuthTests } from './services/test_auth';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -13,6 +14,13 @@ import DashboardPage from './pages/DashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 
 function App() {
+  // Exécuter les tests d'authentification
+  useEffect(() => {
+    runAuthTests().then(result => {
+      console.log('Auth tests completed:', result);
+    });
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

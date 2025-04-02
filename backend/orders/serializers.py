@@ -15,7 +15,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = (
-            'id', 'reference', 'status', 'cart_number',
+            'id', 'reference', 'status', 'cart_number', 'line_count',
             'creator', 'creator_details',
             'preparer', 'preparer_details',
             'controller', 'controller_details',
@@ -52,5 +52,5 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 class OrderUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ('reference', 'cart_number', 'status')
+        fields = ('reference', 'cart_number', 'status', 'line_count')
         read_only_fields = ('reference',)

@@ -91,6 +91,19 @@ class PreparationView(APIView):
             return Response({"error": "Cette commande n'est pas en attente de préparation"}, 
                            status=status.HTTP_400_BAD_REQUEST)
         
+        # Get line_count from request data
+        line_count = request.data.get('line_count')
+        if line_count is not None:
+            try:
+                line_count = int(line_count)
+                if line_count < 1:
+                    return Response({"error": "Le nombre de lignes doit être un entier positif"}, 
+                                  status=status.HTTP_400_BAD_REQUEST)
+                order.line_count = line_count
+            except (ValueError, TypeError):
+                return Response({"error": "Le nombre de lignes doit être un entier positif"}, 
+                               status=status.HTTP_400_BAD_REQUEST)
+        
         # Update order status and preparer
         order.status = 'PREPARED'
         order.preparer = request.user
