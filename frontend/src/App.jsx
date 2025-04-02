@@ -12,6 +12,11 @@ import { runAuthTests } from './services/test_auth';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
+import PreparationPage from './pages/PreparationPage';
+import ControlPage from './pages/ControlPage';
+import PackingPage from './pages/PackingPage';
+import StatisticsPage from './pages/StatisticsPage';
+import UsersPage from './pages/UsersPage';
 
 function App() {
   // Exécuter les tests d'authentification
@@ -36,17 +41,17 @@ function App() {
               <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 {/* Autres routes protégées seront ajoutées ici */}
-                <Route path="/preparation" element={<div>Page de préparation (à implémenter)</div>} />
-                <Route path="/control" element={<div>Page de contrôle (à implémenter)</div>} />
-                <Route path="/packing" element={<div>Page d'emballage (à implémenter)</div>} />
+                <Route path="/preparation" element={<PreparationPage />} />
+                <Route path="/control" element={<ControlPage />} />
+                <Route path="/packing" element={<PackingPage />} />
               </Route>
             </Route>
             
             {/* Routes protégées pour les managers uniquement */}
             <Route element={<ProtectedRoute requireManager={true} />}>
               <Route element={<AppLayout />}>
-                <Route path="/statistics" element={<div>Page de statistiques (à implémenter)</div>} />
-                <Route path="/users" element={<div>Page de gestion des utilisateurs (à implémenter)</div>} />
+                <Route path="/statistics" element={<StatisticsPage />} />
+                <Route path="/users" element={<UsersPage />} />
                 <Route path="/profile" element={<div>Page de profil (à implémenter)</div>} />
                 <Route path="/settings" element={<div>Page de paramètres (à implémenter)</div>} />
               </Route>

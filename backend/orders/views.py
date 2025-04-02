@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from .models import Order
 from .serializers import OrderSerializer, OrderCreateSerializer, OrderUpdateSerializer
 from authentication.models import User
+from django.db.models import Q
 
 # Create your views here.
 class OrderListCreateView(APIView):
@@ -170,6 +171,23 @@ class PackingView(APIView):
         order.save()
         
         return Response(OrderSerializer(order).data)
+
+class OrderReferenceView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def get(self, request, reference):
+        try:
+            # Find the order by reference
+            order = Order.objects.get(reference=reference)
+            
+            # Check if user has permission to view this order
+            if not request.user.is_manager() and request.user != order.creator:
+                return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            
+            serializer = OrderSerializer(order)
+            return Response(serializer.data)
+        except Order.DoesNotExist:
+            return Response({"error": "Commande non trouvée"}, status=status.HTTP_404_NOT_FOUND)
 
 class DashboardView(APIView):
     permission_classes = (permissions.IsAuthenticated,)

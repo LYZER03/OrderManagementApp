@@ -35,9 +35,10 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SearchIcon from '@mui/icons-material/Search';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import HomeIcon from '@mui/icons-material/Home';
 import { useAuth } from '../../context/AuthContext';
+import BackToHomeButton from './BackToHomeButton';
 
 const drawerWidth = 260;
 
@@ -48,7 +49,6 @@ const AppLayout = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorElUser, setAnchorElUser] = useState(null);
-  const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleDrawerToggle = () => {
@@ -61,14 +61,6 @@ const AppLayout = () => {
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
-  };
-
-  const handleOpenNotifications = (event) => {
-    setAnchorElNotifications(event.currentTarget);
-  };
-
-  const handleCloseNotifications = () => {
-    setAnchorElNotifications(null);
   };
 
   const handleLogout = () => {
@@ -126,7 +118,7 @@ const AppLayout = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Typography variant="h5" component="div" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-          GESTION<span style={{ color: theme.palette.text.primary }}>COMMANDES</span>
+          GFC Provap <span style={{ color: theme.palette.text.primary }}>COMMANDES</span>
         </Typography>
       </Box>
       
@@ -289,167 +281,77 @@ const AppLayout = () => {
             <Box sx={{ flexGrow: 1 }} />
             
             <Box 
+              onClick={handleOpenUserMenu}
               sx={{ 
-                position: 'relative',
-                mr: 2,
-                display: { xs: 'none', md: 'flex' },
-                backgroundColor: theme.palette.grey[100],
-                borderRadius: 2,
+                display: 'flex', 
+                alignItems: 'center', 
+                cursor: 'pointer',
                 p: '4px 8px',
-                width: 300
+                borderRadius: 2,
+                '&:hover': {
+                  bgcolor: theme.palette.grey[100]
+                }
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <SearchIcon sx={{ color: theme.palette.grey[500], mr: 1 }} />
-                <InputBase
-                  placeholder="Rechercher..."
-                  sx={{ 
-                    flex: 1,
-                    fontSize: '0.875rem',
-                    '& .MuiInputBase-input': {
-                      padding: '4px 0'
-                    }
-                  }}
-                />
-              </Box>
+              <Avatar 
+                sx={{ 
+                  width: 32, 
+                  height: 32,
+                  bgcolor: theme.palette.primary.main,
+                  color: '#fff',
+                  fontSize: '0.875rem',
+                  fontWeight: 600
+                }}
+              >
+                {user?.first_name?.[0]}{user?.last_name?.[0]}
+              </Avatar>
+              {!isMobile && (
+                <>
+                  <Box sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                      {user?.first_name} {user?.last_name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary, lineHeight: 1.2 }}>
+                      {user?.role === 'MANAGER' ? 'Manager' : 'Agent'}
+                    </Typography>
+                  </Box>
+                  <KeyboardArrowDownIcon sx={{ color: theme.palette.text.secondary, ml: 0.5 }} />
+                </>
+              )}
             </Box>
             
-            <Stack direction="row" spacing={1} alignItems="center">
-              <IconButton 
-                size="medium" 
-                color="inherit" 
-                sx={{ 
-                  bgcolor: theme.palette.grey[100],
-                  color: theme.palette.text.primary,
-                  '&:hover': {
-                    bgcolor: theme.palette.grey[200]
-                  }
-                }}
-                onClick={handleOpenNotifications}
-              >
-                <Badge badgeContent={4} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
-              
-              <Menu
-                sx={{ mt: '45px' }}
-                id="menu-notifications"
-                anchorEl={anchorElNotifications}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorElNotifications)}
-                onClose={handleCloseNotifications}
-              >
-                <Typography sx={{ p: 2, fontWeight: 600 }}>Notifications</Typography>
-                <Divider />
-                <MenuItem onClick={handleCloseNotifications}>
-                  <Typography variant="body2">Nouvelle commande assignée</Typography>
-                </MenuItem>
-                <MenuItem onClick={handleCloseNotifications}>
-                  <Typography variant="body2">Commande en attente de contrôle</Typography>
-                </MenuItem>
-                <MenuItem onClick={handleCloseNotifications}>
-                  <Typography variant="body2">Commande prête pour emballage</Typography>
-                </MenuItem>
-                <MenuItem onClick={handleCloseNotifications}>
-                  <Typography variant="body2">Mise à jour du système</Typography>
-                </MenuItem>
-                <Divider />
-                <Box sx={{ p: 1, textAlign: 'center' }}>
-                  <Typography variant="body2" color="primary" sx={{ cursor: 'pointer' }}>
-                    Voir toutes les notifications
-                  </Typography>
-                </Box>
-              </Menu>
-              
-              <Box 
-                onClick={handleOpenUserMenu}
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  cursor: 'pointer',
-                  p: '4px 8px',
-                  borderRadius: 2,
-                  '&:hover': {
-                    bgcolor: theme.palette.grey[100]
-                  }
-                }}
-              >
-                <Avatar 
-                  sx={{ 
-                    width: 32, 
-                    height: 32,
-                    bgcolor: theme.palette.primary.main,
-                    color: '#fff',
-                    fontSize: '0.875rem',
-                    fontWeight: 600
-                  }}
-                >
-                  {user?.first_name?.[0]}{user?.last_name?.[0]}
-                </Avatar>
-                {!isMobile && (
-                  <>
-                    <Box sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                        {user?.first_name} {user?.last_name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {user?.role === 'MANAGER' ? 'Manager' : 'Agent'}
-                      </Typography>
-                    </Box>
-                    <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.5, color: theme.palette.grey[500] }} />
-                  </>
-                )}
-              </Box>
-              
-              <Menu
-                sx={{ mt: '45px' }}
-                id="menu-appbar"
-                anchorEl={anchorElUser}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorElUser)}
-                onClose={handleCloseUserMenu}
-              >
-                <Box sx={{ px: 2, py: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    {user?.first_name} {user?.last_name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {user?.email || user?.username}
-                  </Typography>
-                </Box>
-                <Divider />
-                <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/profile'); }}>
-                  <Typography variant="body2">Mon profil</Typography>
-                </MenuItem>
-                <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/settings'); }}>
-                  <Typography variant="body2">Paramètres</Typography>
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <LogoutIcon fontSize="small" />
-                  </ListItemIcon>
-                  <Typography variant="body2">Déconnexion</Typography>
-                </MenuItem>
-              </Menu>
-            </Stack>
+            <Menu
+              sx={{ mt: '45px' }}
+              id="menu-appbar"
+              anchorEl={anchorElUser}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(anchorElUser)}
+              onClose={handleCloseUserMenu}
+            >
+              <MenuItem onClick={() => {
+                handleCloseUserMenu();
+                navigate('/profile');
+              }}>
+                <Typography textAlign="center">Profil</Typography>
+              </MenuItem>
+              <MenuItem onClick={() => {
+                handleCloseUserMenu();
+                navigate('/settings');
+              }}>
+                <Typography textAlign="center">Paramètres</Typography>
+              </MenuItem>
+              <MenuItem onClick={handleLogout}>
+                <Typography textAlign="center">Déconnexion</Typography>
+              </MenuItem>
+            </Menu>
           </Box>
         </Toolbar>
       </AppBar>
@@ -457,7 +359,7 @@ const AppLayout = () => {
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="menu items"
+        aria-label="mailbox folders"
       >
         <Drawer
           variant="temporary"
@@ -468,11 +370,7 @@ const AppLayout = () => {
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth,
-              boxShadow: 3
-            },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
           }}
         >
           {drawer}
@@ -485,7 +383,7 @@ const AppLayout = () => {
               boxSizing: 'border-box', 
               width: drawerWidth,
               borderRight: `1px solid ${theme.palette.divider}`,
-              boxShadow: 'none'
+              bgcolor: '#fff'
             },
           }}
           open
@@ -500,11 +398,15 @@ const AppLayout = () => {
           flexGrow: 1, 
           p: 3, 
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          bgcolor: theme.palette.grey[50],
           minHeight: '100vh',
-          backgroundColor: theme.palette.background.default
+          position: 'relative'
         }}
       >
         <Toolbar />
+        {location.pathname !== '/dashboard' && (
+          <BackToHomeButton color="primary" />
+        )}
         <Outlet />
       </Box>
     </Box>
