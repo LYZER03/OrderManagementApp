@@ -15,12 +15,35 @@ export const AuthProvider = ({ children }) => {
 
   // Effet pour charger l'utilisateur depuis le localStorage au chargement de l'application
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
-        const currentUser = authService.getCurrentUser();
-        setUser(currentUser);
+        // Vérifier si le token est valide
+        if (authService.isAuthenticated()) {
+          try {
+            // Essayer de rafraîchir le token pour s'assurer qu'il est valide
+            await authService.refreshToken();
+            const currentUser = authService.getCurrentUser();
+            
+            // Vérifier que l'utilisateur a un rôle valide
+            if (currentUser && (currentUser.role === 'AGENT' || currentUser.role === 'MANAGER')) {
+              setUser(currentUser);
+            } else {
+              console.warn('Utilisateur sans rôle valide, déconnexion');
+              authService.logout();
+              setUser(null);
+            }
+          } catch (refreshError) {
+            console.error('Erreur lors du rafraîchissement du token:', refreshError);
+            authService.logout();
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
       } catch (err) {
         console.error('Error initializing auth:', err);
+        authService.logout();
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -76,7 +99,8 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     isAuthenticated: authService.isAuthenticated,
-    isManager: authService.isManager
+    isManager: authService.isManager,
+    isAgent: authService.isAgent
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

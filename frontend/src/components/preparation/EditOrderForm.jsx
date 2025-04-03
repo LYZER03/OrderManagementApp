@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -13,11 +13,9 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
 import orderService from '../../services/orderService';
 
-const AddOrderForm = ({ open, onClose, onOrderAdded }) => {
-  const { user } = useAuth();
+const EditOrderForm = ({ open, onClose, order, onOrderUpdated }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState({
@@ -28,6 +26,17 @@ const AddOrderForm = ({ open, onClose, onOrderAdded }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Initialiser le formulaire avec les données de la commande
+  useEffect(() => {
+    if (order) {
+      setFormData({
+        reference: order.reference || '',
+        cart_number: order.cart_number || '',
+        line_count: order.line_count ? String(order.line_count) : ''
+      });
+    }
+  }, [order]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -59,24 +68,17 @@ const AddOrderForm = ({ open, onClose, onOrderAdded }) => {
       const orderData = {
         reference: formData.reference.trim(),
         cart_number: formData.cart_number.trim(),
-        line_count: parseInt(formData.line_count),
-        creator: user.id
+        line_count: parseInt(formData.line_count)
       };
 
-      // Appel API pour créer la commande
-      await orderService.createOrder(orderData);
+      // Appel API pour mettre à jour la commande
+      await orderService.updateOrder(order.id, orderData);
       
       setSuccess(true);
-      // Réinitialiser le formulaire
-      setFormData({
-        reference: '',
-        cart_number: '',
-        line_count: ''
-      });
       
-      // Informer le parent qu'une commande a été ajoutée
-      if (onOrderAdded) {
-        onOrderAdded();
+      // Informer le parent qu'une commande a été mise à jour
+      if (onOrderUpdated) {
+        onOrderUpdated();
       }
       
       // Fermer le dialogue après un court délai
@@ -85,8 +87,8 @@ const AddOrderForm = ({ open, onClose, onOrderAdded }) => {
       }, 1500);
       
     } catch (err) {
-      console.error('Erreur lors de la création de la commande', err);
-      setError(err.message || 'Une erreur est survenue lors de la création de la commande');
+      console.error('Erreur lors de la mise à jour de la commande', err);
+      setError(err.message || 'Une erreur est survenue lors de la mise à jour de la commande');
     } finally {
       setLoading(false);
     }
@@ -107,11 +109,11 @@ const AddOrderForm = ({ open, onClose, onOrderAdded }) => {
       }}
     >
       <DialogTitle sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem', py: isMobile ? 1.5 : 2 }}>
-        Ajouter une nouvelle commande
+        Modifier la commande
       </DialogTitle>
       <DialogContent sx={{ px: isMobile ? 2 : 3 }}>
         <DialogContentText sx={{ mb: 2 }}>
-          Remplissez les informations ci-dessous pour créer une nouvelle commande à préparer.
+          Modifiez les informations ci-dessous pour mettre à jour la commande.
         </DialogContentText>
         
         {error && (
@@ -122,7 +124,7 @@ const AddOrderForm = ({ open, onClose, onOrderAdded }) => {
         
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            Commande créée avec succès !
+            Commande mise à jour avec succès !
           </Alert>
         )}
         
@@ -134,7 +136,6 @@ const AddOrderForm = ({ open, onClose, onOrderAdded }) => {
             id="reference"
             label="Référence de la commande"
             name="reference"
-            autoFocus
             value={formData.reference}
             onChange={handleChange}
             disabled={loading}
@@ -181,11 +182,11 @@ const AddOrderForm = ({ open, onClose, onOrderAdded }) => {
           startIcon={loading ? <CircularProgress size={isMobile ? 16 : 20} /> : null}
           sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
         >
-          {loading ? 'Création...' : 'Ajouter'}
+          {loading ? 'Mise à jour...' : isMobile ? 'Mettre à jour' : 'Mettre à jour'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default AddOrderForm;
+export default EditOrderForm;

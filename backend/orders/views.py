@@ -76,9 +76,13 @@ class PreparationView(APIView):
     
     def get(self, request):
         # Get orders in CREATED status
-        if request.user.is_manager():
+        creator_only = request.query_params.get('creator_only', 'false').lower() == 'true'
+        
+        if request.user.is_manager() and not creator_only:
+            # Manager voit toutes les commandes sauf si creator_only=true
             orders = Order.objects.filter(status='CREATED').order_by('-created_at')
         else:
+            # Agent ou manager avec creator_only=true ne voit que ses propres commandes
             orders = Order.objects.filter(status='CREATED', creator=request.user).order_by('-created_at')
         
         serializer = OrderSerializer(orders, many=True)

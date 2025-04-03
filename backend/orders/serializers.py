@@ -43,7 +43,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ('reference', 'cart_number')
+        fields = ('reference', 'cart_number', 'line_count')
     
     def create(self, validated_data):
         user = self.context['request'].user

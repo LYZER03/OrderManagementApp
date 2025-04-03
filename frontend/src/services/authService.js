@@ -68,8 +68,26 @@ const authService = {
 
   // Récupération des informations de l'utilisateur connecté
   getCurrentUser: () => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    try {
+      const user = localStorage.getItem('user');
+      if (!user) return null;
+      
+      // Vérifier que les données utilisateur sont valides
+      const parsedUser = JSON.parse(user);
+      if (!parsedUser || !parsedUser.id || !parsedUser.role) {
+        console.warn('Données utilisateur invalides dans le localStorage');
+        // Si les données sont invalides, on nettoie le localStorage
+        authService.logout();
+        return null;
+      }
+      
+      return parsedUser;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données utilisateur:', error);
+      // En cas d'erreur, on nettoie le localStorage
+      authService.logout();
+      return null;
+    }
   },
 
   // Vérification si l'utilisateur est connecté
@@ -81,6 +99,12 @@ const authService = {
   isManager: () => {
     const user = authService.getCurrentUser();
     return user && user.role === 'MANAGER';
+  },
+  
+  // Vérification si l'utilisateur est un agent
+  isAgent: () => {
+    const user = authService.getCurrentUser();
+    return user && user.role === 'AGENT';
   },
 
   // Rafraîchissement du token d'accès

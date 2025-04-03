@@ -6,7 +6,8 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AppLayout from './components/common/AppLayout';
 import theme from './theme';
-import { runAuthTests } from './services/test_auth';
+// Import désactivé pour éviter les connexions automatiques en tant que manager
+// import { runAuthTests } from './services/test_auth';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -19,12 +20,12 @@ import StatisticsPage from './pages/StatisticsPage';
 import UsersPage from './pages/UsersPage';
 
 function App() {
-  // Exécuter les tests d'authentification
-  useEffect(() => {
-    runAuthTests().then(result => {
-      console.log('Auth tests completed:', result);
-    });
-  }, []);
+  // Tests d'authentification désactivés pour éviter les connexions automatiques
+  // useEffect(() => {
+  //   runAuthTests().then(result => {
+  //     console.log('Auth tests completed:', result);
+  //   });
+  // }, []);
 
   return (
     <ThemeProvider theme={theme}>

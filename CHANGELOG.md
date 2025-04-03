@@ -1,5 +1,18 @@
 # Changelog - Application de Gestion de Commandes Interne
 
+## [Version 0.4.8] - 2025-04-03
+
+### Ajouts
+- Ajout d'une colonne "Lignes" dans le tableau des commandes pour afficher le nombre de lignes
+- Ajout d'une colonne "Actions" avec des boutons pour valider et modifier les commandes
+- Création d'un formulaire de modification des commandes
+- Création d'un formulaire de validation des commandes
+- Ajout d'une méthode dans le service orderService pour mettre à jour une commande
+
+### Améliorations
+- Amélioration de l'interface utilisateur avec des icônes et des tooltips
+- Validation des données avant soumission des formulaires
+
 ## [Version 0.4.6] - 2025-04-02
 
 ### Améliorations

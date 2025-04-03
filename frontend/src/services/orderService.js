@@ -22,10 +22,13 @@ axios.interceptors.request.use(
 
 const orderService = {
   // Récupérer toutes les commandes à préparer (statut CREATED)
-  getOrdersToPrepare: async () => {
+  getOrdersToPrepare: async (creatorOnly = false) => {
     try {
-      //const response = await axios.get(`${API_URL}/orders/preparation/`);
-      const response = await axios.get(`${API_BASE}/orders/preparation/`);
+      const url = creatorOnly
+        ? `${API_BASE}/orders/preparation/?creator_only=true`
+        : `${API_BASE}/orders/preparation/`;
+      
+      const response = await axios.get(url);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des commandes à préparer', error);
@@ -122,6 +125,16 @@ const orderService = {
       return response.data;
     } catch (error) {
       console.error(`Erreur lors de l'emballage de la commande ${orderId}`, error);
+      throw error;
+    }
+  },
+
+  updateOrder: async (orderId, orderData) => {
+    try {
+      const response = await axios.put(`${API_BASE}/orders/${orderId}/`, orderData);
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la mise à jour de la commande ${orderId}`, error);
       throw error;
     }
   }

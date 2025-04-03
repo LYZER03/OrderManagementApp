@@ -88,7 +88,7 @@ const PreparationForm = ({ order, onPrepare, loading, error, success }) => {
       )}
       
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="subtitle2" color="textSecondary" gutterBottom>
             Référence
           </Typography>
@@ -96,7 +96,7 @@ const PreparationForm = ({ order, onPrepare, loading, error, success }) => {
             {order.reference}
           </Typography>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="subtitle2" color="textSecondary" gutterBottom>
             Numéro de chariot
           </Typography>
@@ -104,7 +104,7 @@ const PreparationForm = ({ order, onPrepare, loading, error, success }) => {
             {order.cart_number}
           </Typography>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="subtitle2" color="textSecondary" gutterBottom>
             Date de création
           </Typography>
@@ -114,7 +114,7 @@ const PreparationForm = ({ order, onPrepare, loading, error, success }) => {
               'Date inconnue'}
           </Typography>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="subtitle2" color="textSecondary" gutterBottom>
             Créée par
           </Typography>

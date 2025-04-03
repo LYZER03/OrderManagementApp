@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, InputBase, IconButton, Paper, Typography, useTheme, Tooltip, Button } from '@mui/material';
+import { Box, InputBase, IconButton, Paper, Typography, useTheme, Tooltip, Button, useMediaQuery } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import AddIcon from '@mui/icons-material/Add';
@@ -8,6 +8,7 @@ const OrderSearchBar = ({ onSearch, placeholder = "Filtrer les commandes par ré
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -24,8 +25,14 @@ const OrderSearchBar = ({ onSearch, placeholder = "Filtrer les commandes par ré
   };
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-      <Box sx={{ flexGrow: 1 }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      alignItems: isMobile ? 'stretch' : 'center', 
+      mb: 3,
+      width: '100%'
+    }}>
+      <Box sx={{ flexGrow: 1, width: '100%' }}>
         <Paper
           component="form"
           onSubmit={handleSearch}
@@ -35,7 +42,7 @@ const OrderSearchBar = ({ onSearch, placeholder = "Filtrer les commandes par ré
             display: 'flex',
             alignItems: 'center',
             width: '100%',
-            maxWidth: 500,
+            maxWidth: isMobile ? '100%' : '100%',
             mb: error ? 1 : 0,
             border: `1px solid ${error ? theme.palette.error.main : theme.palette.divider}`,
             borderRadius: 2,
@@ -86,9 +93,14 @@ const OrderSearchBar = ({ onSearch, placeholder = "Filtrer les commandes par ré
           color="primary"
           startIcon={<AddIcon />}
           onClick={onAddClick}
-          sx={{ ml: 2, height: 40 }}
+          sx={{ 
+            ml: isMobile ? 0 : 2, 
+            mt: isMobile ? 2 : 0,
+            height: 40,
+            width: isMobile ? '100%' : 'auto'
+          }}
         >
-          Nouvelle commande
+          {isMobile ? 'Ajouter' : 'Ajouter'}
         </Button>
       )}
     </Box>
