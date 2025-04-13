@@ -1,5 +1,20 @@
 # Changelog - Application de Gestion de Commandes Interne
 
+## [Version 0.8.1] - 2025-04-13
+
+### Améliorations
+- Remplacement des données fictives par des données réelles pour les graphiques de commandes mensuelles
+- Remplacement des données fictives par des données réelles pour les graphiques de commandes emballées
+- Correction de l'affichage des noms d'agents dans le tableau des commandes récentes
+- Amélioration des sous-titres des graphiques pour afficher des informations dynamiques basées sur les données réelles
+- Modification de la disposition de la légende du graphique en camembert (vertical à droite)
+- Suppression du texte "4 Statuts" au centre du graphique en camembert pour une meilleure lisibilité
+
+### Corrections
+- Correction des problèmes d'affichage sur les appareils mobiles
+- Ajout de la définition de la variable isMobile dans tous les composants de statistiques
+- Correction des références aux variables non définies dans le composant PieChartCard
+
 ## [Version 0.8.0] - 2025-04-13
 
 ### Ajouts
