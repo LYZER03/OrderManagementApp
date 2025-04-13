@@ -1,5 +1,28 @@
 # Changelog - Application de Gestion de Commandes Interne
 
+## [Version 0.7.0] - 2025-04-13
+
+### Ajouts
+- Implémentation complète du module "Gestion des utilisateurs" pour les managers
+- Création d'une interface de liste des utilisateurs avec filtrage et recherche
+- Ajout d'un formulaire de création et modification des comptes utilisateurs
+- Implémentation des fonctionnalités d'attribution des rôles (Agent/Manager)
+- Ajout de la gestion des permissions basée sur les rôles
+- Création d'une API complète pour la gestion des utilisateurs (CRUD)
+
+### Améliorations
+- Interface utilisateur responsive adaptée aux différentes tailles d'écran
+- Validation des formulaires côté client et côté serveur
+- Messages de confirmation et d'erreur contextuels
+- Gestion sécurisée des mots de passe (hachage côté serveur)
+- Protection contre la suppression de son propre compte
+- Protection contre la modification de son propre rôle
+
+### Modifications techniques
+- Ajout de nouvelles routes API pour la gestion des utilisateurs
+- Implémentation de contrôles d'accès basés sur les rôles pour toutes les opérations
+- Optimisation des requêtes avec pagination et filtrage côté client
+
 ## [Version 0.6.0] - 2025-04-13
 
 ### Ajouts
