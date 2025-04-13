@@ -75,42 +75,81 @@ class OrderListCreateView(APIView):
             return Response({"error": "Seuls les managers peuvent effectuer une suppression en masse"}, 
                             status=status.HTTP_403_FORBIDDEN)
         
-        # Récupérer les paramètres de filtrage
-        status_filter = request.query_params.get('status', None)
-        start_date = request.query_params.get('start_date', None)
-        end_date = request.query_params.get('end_date', None)
-        
-        # Construire la requête de base
-        queryset = Order.objects.all()
-        
-        # Appliquer les filtres
-        if status_filter:
-            queryset = queryset.filter(status=status_filter)
+        try:
+            # Récupérer les paramètres de filtrage
+            status_filter = request.query_params.get('status', None)
+            start_date = request.query_params.get('start_date', None)
+            end_date = request.query_params.get('end_date', None)
             
-        if start_date:
-            try:
-                start_date = parse_datetime(start_date)
-                queryset = queryset.filter(created_at__gte=start_date)
-            except (ValueError, TypeError):
-                pass
+            print(f"Paramètres de suppression en masse reçus: status={status_filter}, start_date={start_date}, end_date={end_date}")
             
-        if end_date:
-            try:
-                end_date = parse_datetime(end_date)
-                queryset = queryset.filter(created_at__lte=end_date)
-            except (ValueError, TypeError):
-                pass
+            # Construire la requête de base
+            queryset = Order.objects.all()
+            
+            # Appliquer les filtres
+            if status_filter:
+                queryset = queryset.filter(status=status_filter)
+                
+            if start_date:
+                try:
+                    # Essayer de parser la date avec plusieurs formats
+                    try:
+                        start_date = parse_datetime(start_date)
+                    except (ValueError, TypeError):
+                        # Si le format ISO ne fonctionne pas, essayer un format plus simple
+                        from datetime import datetime
+                        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                    
+                    queryset = queryset.filter(created_at__gte=start_date)
+                    print(f"Filtre de date de début appliqué: {start_date}")
+                except Exception as e:
+                    print(f"Erreur lors du parsing de la date de début: {e}")
+                    return Response({"error": f"Format de date invalide pour start_date: {start_date}. Utilisez le format ISO."}, 
+                                    status=status.HTTP_400_BAD_REQUEST)
+                
+            if end_date:
+                try:
+                    # Essayer de parser la date avec plusieurs formats
+                    try:
+                        end_date = parse_datetime(end_date)
+                    except (ValueError, TypeError):
+                        # Si le format ISO ne fonctionne pas, essayer un format plus simple
+                        from datetime import datetime
+                        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                        # Ajouter 23:59:59 pour inclure toute la journée
+                        end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+                    
+                    queryset = queryset.filter(created_at__lte=end_date)
+                    print(f"Filtre de date de fin appliqué: {end_date}")
+                except Exception as e:
+                    print(f"Erreur lors du parsing de la date de fin: {e}")
+                    return Response({"error": f"Format de date invalide pour end_date: {end_date}. Utilisez le format ISO."}, 
+                                    status=status.HTTP_400_BAD_REQUEST)
+            
+            # Compter le nombre de commandes qui seront supprimées
+            count = queryset.count()
+            
+            if count == 0:
+                return Response({
+                    "message": "Aucune commande ne correspond aux critères de filtrage",
+                    "count": 0
+                }, status=status.HTTP_200_OK)
+            
+            # Supprimer les commandes
+            deleted, details = queryset.delete()
+            
+            print(f"Suppression en masse réussie: {deleted} commandes supprimées")
+            
+            return Response({
+                "message": f"{deleted} commandes ont été supprimées avec succès",
+                "count": deleted
+            }, status=status.HTTP_200_OK)
         
-        # Compter le nombre de commandes qui seront supprimées
-        count = queryset.count()
-        
-        # Supprimer les commandes
-        deleted, _ = queryset.delete()
-        
-        return Response({
-            "message": f"{deleted} commandes ont été supprimées avec succès",
-            "count": deleted
-        }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Erreur lors de la suppression en masse: {str(e)}")
+            return Response({
+                "error": f"Une erreur est survenue lors de la suppression en masse: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class OrderDetailView(APIView):
     permission_classes = (permissions.IsAuthenticated,)

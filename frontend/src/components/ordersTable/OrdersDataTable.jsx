@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import orderService from '../../services/orderService';
 import {
   Box,
   Paper,
@@ -24,7 +25,8 @@ import {
   DialogTitle,
   CircularProgress,
   Alert,
-  useTheme
+  useTheme,
+  InputAdornment
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -35,6 +37,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import OrderDetailsDialog from './OrderDetailsDialog';
 
 const OrdersDataTable = ({ 
@@ -50,7 +54,7 @@ const OrdersDataTable = ({
 }) => {
   const theme = useTheme();
   // Utiliser les valeurs de pagination fournies par le parent
-  const { page, pageSize, totalCount, totalPages } = pagination;
+  const { page, pageSize, totalCount, totalPages } = pagination || { page: 1, pageSize: 20, totalCount: 0, totalPages: 0 };
   const [selected, setSelected] = useState([]);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -67,6 +71,11 @@ const OrdersDataTable = ({
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  
+  // Calculer le nombre de lignes vides à afficher pour maintenir une hauteur constante
+  const emptyRows = page > 0 ? Math.max(0, (pageSize - (orders ? orders.length : 0))) : 0;
   
   // Liste des statuts possibles pour le filtrage
   const statusOptions = [
@@ -85,6 +94,30 @@ const OrdersDataTable = ({
       endDate: endDate,
       ordering: filters.ordering
     });
+  };
+  
+  // Fonction pour filtrer les commandes par référence
+  const handleSearchChange = (event) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+    
+    // Si la recherche est vide, ne pas filtrer localement
+    if (!query.trim()) {
+      setFilteredOrders(orders);
+      return;
+    }
+    
+    // Filtrer localement les commandes affichées actuellement
+    const filtered = orders.filter(order => 
+      order.reference.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredOrders(filtered);
+  };
+  
+  // Réinitialiser la recherche
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setFilteredOrders(orders);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -191,16 +224,38 @@ const OrdersDataTable = ({
     
     try {
       // Utiliser les filtres actuels pour la suppression en masse
-      const currentFilters = {
-        status: filters.status,
-        start_date: filters.startDate,
-        end_date: filters.endDate
-      };
+      const currentFilters = {};
+      
+      // Ajouter le statut s'il est sélectionné
+      if (selectedStatus) {
+        currentFilters.status = selectedStatus;
+      } else if (filters.status) {
+        currentFilters.status = filters.status;
+      }
+      
+      // Ajouter les dates s'il y en a
+      if (startDate) {
+        // Formater la date correctement pour l'API
+        currentFilters.start_date = startDate.toISOString();
+      } else if (filters.startDate) {
+        currentFilters.start_date = filters.startDate;
+      }
+      
+      if (endDate) {
+        // Formater la date correctement pour l'API
+        currentFilters.end_date = endDate.toISOString();
+      } else if (filters.endDate) {
+        currentFilters.end_date = filters.endDate;
+      }
+      
+      console.log('Filtres pour la suppression en masse:', currentFilters);
       
       // Appeler le service pour supprimer en masse
       const response = await orderService.bulkDeleteOrders(currentFilters);
       
       if (response) {
+        // Mettre à jour le compteur de suppression
+        setBulkDeleteCount(response.count || 0);
         setBulkDeleteSuccess(true);
         setSelected([]);
         
@@ -212,6 +267,7 @@ const OrdersDataTable = ({
         }, 1500);
       }
     } catch (err) {
+      console.error('Erreur lors de la suppression en masse:', err);
       setBulkDeleteError(err.response?.data?.error || 'Une erreur est survenue lors de la suppression en masse');
     } finally {
       setBulkDeleteLoading(false);
@@ -243,8 +299,7 @@ const OrdersDataTable = ({
 
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
-  // Calculer les lignes vides pour maintenir une hauteur constante
-  const emptyRows = Math.max(0, pageSize - orders.length);
+  // Cette variable est déjà déclarée plus haut dans le code
 
   // Fonction pour obtenir le statut formaté
   const getStatusChip = (status) => {
@@ -286,32 +341,61 @@ const OrdersDataTable = ({
     );
   };
 
-  if (loading) {
+  // Initialiser filteredOrders avec orders quand orders change
+  useEffect(() => {
+    setFilteredOrders(orders || []);
+  }, [orders]);
+
+  // Préparer le contenu conditionnel en fonction de l'état de chargement et des erreurs
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Erreur lors du chargement des commandes: {error}
+        </Alert>
+      );
+    }
+
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 3 }}>
-        Erreur lors du chargement des commandes: {error}
-      </Alert>
-    );
-  }
-
-  // Nous ne retournons plus un simple message d'alerte quand aucune commande n'est trouvée
-  // Au lieu de cela, nous afficherons le message dans l'interface principale avec les filtres
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2 }}>
+      <Box sx={{ width: '100%' }}>
+        <Paper sx={{ width: '100%', mb: 2 }}>
         <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" id="tableTitle" component="div">
-            Table des commandes
-          </Typography>
+          <TextField
+            id="search-reference"
+            placeholder="Rechercher par référence..."
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            sx={{ width: { xs: '100%', sm: '300px' } }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery && (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="clear search"
+                    onClick={handleClearSearch}
+                    edge="end"
+                    size="small"
+                  >
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
           <Stack direction="row" spacing={1}>
             <Button
               variant="outlined"
@@ -452,12 +536,22 @@ const OrdersDataTable = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {orders.map((order, index) => {
+                  {!orders || (searchQuery ? filteredOrders : orders).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center">
+                        <Typography variant="body1" sx={{ py: 5 }}>
+                          {searchQuery ? `Aucune commande trouvée pour "${searchQuery}"` : "Aucune commande trouvée."}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    (searchQuery ? filteredOrders : orders).map((order, index) => {
                       const isItemSelected = isSelected(order.id);
-
+                      
                       return (
                         <TableRow
                           hover
+                          onClick={(event) => handleClick(event, order.id)}
                           role="checkbox"
                           aria-checked={isItemSelected}
                           tabIndex={-1}
@@ -468,9 +562,8 @@ const OrdersDataTable = ({
                             <Checkbox
                               color="primary"
                               checked={isItemSelected}
-                              onClick={(event) => handleClick(event, order.id)}
                               inputProps={{
-                                'aria-labelledby': `enhanced-table-checkbox-${order.id}`,
+                                'aria-labelledby': `enhanced-table-checkbox-${index}`,
                               }}
                             />
                           </TableCell>
@@ -502,7 +595,8 @@ const OrdersDataTable = ({
                           </TableCell>
                         </TableRow>
                       );
-                    })}
+                    })
+                  )}
                   {emptyRows > 0 && (
                     <TableRow style={{ height: 53 * emptyRows }}>
                       <TableCell colSpan={8} />
@@ -524,9 +618,9 @@ const OrdersDataTable = ({
             />
           </>
         )}
-      </Paper>
+        </Paper>
 
-      {/* Dialogue de confirmation de suppression */}
+        {/* Dialogue de confirmation de suppression */}
       <Dialog
         open={openDeleteDialog}
         onClose={handleCloseDeleteDialog}
@@ -578,7 +672,7 @@ const OrdersDataTable = ({
           Suppression en masse
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="bulk-delete-dialog-description">
+          <Box sx={{ mb: 2 }}>
             <Typography variant="body1" fontWeight="bold" color="error" gutterBottom>
               ATTENTION : Action critique
             </Typography>
@@ -591,7 +685,7 @@ const OrdersDataTable = ({
             <Typography variant="body2">
               Êtes-vous absolument sûr de vouloir continuer ?
             </Typography>
-          </DialogContentText>
+          </Box>
           {bulkDeleteError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {bulkDeleteError}
@@ -625,8 +719,11 @@ const OrdersDataTable = ({
         onClose={handleCloseDetailsDialog}
         order={selectedOrder}
       />
-    </Box>
-  );
+      </Box>
+    );
+  };
+  
+  return renderContent();
 };
 
 export default OrdersDataTable;

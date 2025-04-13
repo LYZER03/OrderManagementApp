@@ -200,8 +200,8 @@ const StatisticsPage = () => {
       </Box>
       
       {/* Cartes de statistiques générales */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
+        <Box>
           <StatCard 
             icon={<ShoppingCartIcon />} 
             title="Commandes totales" 
@@ -210,8 +210,8 @@ const StatisticsPage = () => {
             changeText="depuis la semaine dernière" 
             color="primary"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box>
           <StatCard 
             icon={<PendingActionsIcon />} 
             title="En cours" 
@@ -220,8 +220,8 @@ const StatisticsPage = () => {
             changeText="depuis le mois dernier" 
             color="info"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box>
           <StatCard 
             icon={<CheckCircleIcon />} 
             title="Complétées" 
@@ -230,8 +230,8 @@ const StatisticsPage = () => {
             changeText="depuis hier" 
             color="success"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box>
           <StatCard 
             icon={<TrendingUpIcon />} 
             title="Croissance" 
@@ -239,13 +239,13 @@ const StatisticsPage = () => {
             lastUpdated="Juste mis à jour" 
             color="warning"
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
       
       {/* Graphiques et tableaux */}
-      <Grid container spacing={4} sx={{ px: 0 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, px: 0 }}>
         {/* Graphique des ventes quotidiennes */}
-        <Grid item xs={12}>
+        <Box>
           <LineChartCard 
             title="Commandes mensuelles" 
             subtitle={`${dailySales.reduce((sum, item) => sum + item.sales, 0)} commandes créées au total`} 
@@ -256,10 +256,10 @@ const StatisticsPage = () => {
             height={350}
             width="95%"
           />
-        </Grid>
+        </Box>
         
         {/* Graphique des tâches complétées */}
-        <Grid item xs={12}>
+        <Box>
           <LineChartCard 
             title="Commandes emballées" 
             subtitle={`${completedTasks.reduce((sum, item) => sum + item.tasks, 0)} commandes emballées au total`} 
@@ -270,10 +270,10 @@ const StatisticsPage = () => {
             height={350}
             width="95%"
           />
-        </Grid>
+        </Box>
         
         {/* Graphique des commandes par statut */}
-        <Grid item xs={12}>
+        <Box>
           <PieChartCard 
             title="Commandes par statut" 
             subtitle="Répartition des commandes selon leur statut actuel" 
@@ -284,29 +284,29 @@ const StatisticsPage = () => {
             height={400}
             width="95%"
           />
-        </Grid>
+        </Box>
         
         {/* Tableaux des performances des agents et des commandes récentes */}
-        <Grid container direction="column" spacing={6} sx={{ width: '100%', px: 0 }}>
-          <Grid item xs={12}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', px: 0 }}>
+          <Box>
             <AgentPerformanceTable 
               title="Performance des agents" 
               subtitle="Évaluation des performances des agents par commandes traitées et temps moyen" 
               data={agentPerformance}
               lastUpdated="Mis à jour aujourd'hui"
             />
-          </Grid>
+          </Box>
           
-          <Grid item xs={12}>
+          <Box>
             <RecentOrdersTable 
               title="Commandes récentes" 
               subtitle="Dernières commandes traitées" 
               data={recentOrders}
               lastUpdated="Mis à jour aujourd'hui"
             />
-          </Grid>
-        </Grid>
-      </Grid>
+          </Box>
+        </Box>
+      </Box>
     </Container>
   );
 };
