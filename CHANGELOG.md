@@ -1,5 +1,27 @@
 # Changelog - Application de Gestion de Commandes Interne
 
+## [Version 0.8.0] - 2025-04-13
+
+### Ajouts
+- Implémentation complète du module "Statistiques" avec des graphiques interactifs et tableaux de bord
+- Création de cartes statistiques pour afficher les indicateurs clés de performance
+- Ajout de graphiques à barres, linéaires et circulaires pour visualiser les données
+- Implémentation de tableaux pour la performance des agents et les commandes récentes
+- Intégration de la bibliothèque Recharts pour des visualisations de données modernes
+
+### Fonctionnalités statistiques
+- Affichage du nombre de commandes par statut (Créées, Préparées, Contrôlées, Emballées)
+- Visualisation du temps moyen de traitement par étape (Préparation, Contrôle, Emballage)
+- Analyse de la performance des agents (commandes traitées, temps moyen, évaluation)
+- Présentation des tendances de ventes quotidiennes et des visites du site
+- Suivi des tâches complétées et de la croissance globale
+
+### Améliorations techniques
+- Architecture de composants réutilisables pour les différents types de graphiques
+- Mise en place d'un service dédié aux statistiques avec des données fictives
+- Interface responsive adaptée à tous les appareils (mobile, tablette, desktop)
+- Optimisation du chargement des données avec Promise.all pour les requêtes parallèles
+
 ## [Version 0.7.0] - 2025-04-13
 
 ### Ajouts
