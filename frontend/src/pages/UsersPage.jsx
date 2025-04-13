@@ -3,8 +3,8 @@ import { Container, Paper, Typography, Box } from '@mui/material';
 
 const UsersPage = () => {
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper sx={{ p: 3, ml: 6 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, width: '100%' }}>
+      <Paper sx={{ p: 3, width: '100%', maxWidth: '100%', bgcolor: '#ffffff', boxShadow: 'none' }}>
         <Typography variant="h4" gutterBottom>
           Gestion des utilisateurs
         </Typography>

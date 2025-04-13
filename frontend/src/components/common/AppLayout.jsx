@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import gfcLogo from '../../assets/gfc_logo.webp';
 import { 
   AppBar, 
   Box, 
@@ -35,12 +36,14 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SearchIcon from '@mui/icons-material/Search';
+import TableViewIcon from '@mui/icons-material/TableView';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import HomeIcon from '@mui/icons-material/Home';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../../context/AuthContext';
 import BackToHomeButton from './BackToHomeButton';
 
-const drawerWidth = 260;
+const drawerWidth = 240;
 
 const AppLayout = () => {
   const theme = useTheme();
@@ -48,23 +51,13 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorElUser, setAnchorElUser] = useState(null);
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
-
   const handleLogout = () => {
-    handleCloseUserMenu();
     logout();
     navigate('/login');
   };
@@ -96,6 +89,12 @@ const AppLayout = () => {
       roles: ['AGENT', 'MANAGER']
     },
     {
+      text: 'Table des commandes',
+      icon: <TableViewIcon />,
+      path: '/orders-table',
+      roles: ['MANAGER']
+    },
+    {
       text: 'Statistiques',
       icon: <BarChartIcon />,
       path: '/statistics',
@@ -115,62 +114,35 @@ const AppLayout = () => {
   );
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Typography variant="h5" component="div" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-          GFC Provap <span style={{ color: theme.palette.text.primary }}>COMMANDES</span>
-        </Typography>
-      </Box>
-      
-      <Divider />
-      
-      <Box sx={{ p: 2 }}>
-        <Box
-          sx={{
-            p: 2,
-            borderRadius: 2,
-            bgcolor: theme.palette.primary.light,
-            display: 'flex',
-            alignItems: 'center',
-            mb: 1
+    <Box sx={{ 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      bgcolor: '#424242', 
+      color: 'white',
+      borderRadius: '16px',
+      m: 1.5,
+      boxShadow: '0 4px 20px 0 rgba(0,0,0,0.14), 0 7px 10px -5px rgba(66,66,66,0.4)',
+      overflow: 'hidden'
+    }}>
+      <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', bgcolor: '#424242' }}>
+        <Box 
+          component="img"
+          src={gfcLogo}
+          alt="GFC Logo"
+          sx={{ 
+            height: 40,
+            maxWidth: '100%',
+            objectFit: 'contain'
           }}
-        >
-          <Avatar 
-            sx={{ 
-              width: 40, 
-              height: 40,
-              bgcolor: theme.palette.primary.main,
-              color: '#fff',
-              mr: 2
-            }}
-          >
-            {user?.first_name?.[0]}{user?.last_name?.[0]}
-          </Avatar>
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: theme.palette.primary.dark }}>
-              {user?.first_name} {user?.last_name}
-            </Typography>
-            <Chip
-              label={user?.role === 'MANAGER' ? 'Manager' : 'Agent'}
-              size="small"
-              sx={{ 
-                bgcolor: user?.role === 'MANAGER' ? theme.palette.secondary.light : theme.palette.success.light,
-                color: user?.role === 'MANAGER' ? theme.palette.secondary.dark : theme.palette.success.dark,
-                fontWeight: 600,
-                fontSize: '0.7rem'
-              }}
-            />
-          </Box>
-        </Box>
+        />
       </Box>
       
-      <Divider sx={{ mb: 1 }} />
+
       
-      <Typography variant="overline" sx={{ px: 3, py: 1, color: theme.palette.text.secondary }}>
-        MENU PRINCIPAL
-      </Typography>
+
       
-      <List sx={{ px: 2, flex: 1 }}>
+      <List sx={{ px: 1, flex: 1, mt: 2, color: 'rgba(255, 255, 255, 0.9)', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
         {filteredMenuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton 
@@ -179,60 +151,70 @@ const AppLayout = () => {
                 navigate(item.path);
                 setMobileOpen(false);
               }}
-              sx={{ 
-                borderRadius: 2,
+              sx={{
+                borderRadius: 1,
                 py: 1,
+                pl: 2,
                 '&.Mui-selected': {
-                  bgcolor: theme.palette.primary.light,
+                  bgcolor: 'rgba(255, 255, 255, 0.15)',
+                  color: '#fff',
                   '&:hover': {
-                    bgcolor: theme.palette.primary.light,
+                    bgcolor: 'rgba(255, 255, 255, 0.25)'
                   },
-                  '& .MuiListItemIcon-root': {
-                    color: theme.palette.primary.main,
-                  },
-                  '& .MuiListItemText-primary': {
-                    color: theme.palette.primary.main,
-                    fontWeight: 600,
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 0,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    height: '80%',
+                    width: '4px',
+                    bgcolor: '#fff',
+                    borderRadius: '0 4px 4px 0'
                   }
-                }
+                },
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.1)'
+                },
+                color: 'rgba(255, 255, 255, 0.7)'
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>
+              <ListItemIcon sx={{ minWidth: 40, color: 'rgba(255, 255, 255, 0.7)' }}>
                 {item.icon}
               </ListItemIcon>
               <ListItemText 
                 primary={item.text} 
-                primaryTypographyProps={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: location.pathname === item.path ? 600 : 500 
-                }} 
+                primaryTypographyProps={{
+                  fontSize: 14,
+                  fontWeight: location.pathname === item.path ? 600 : 400
+                }}
               />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
       
-      <Box sx={{ p: 2, mt: 'auto' }}>
-        <Divider sx={{ mb: 2 }} />
+      <Box sx={{ p: 2, mt: 'auto', bgcolor: '#424242' }}>
+        <Divider sx={{ mb: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
         <ListItemButton 
           onClick={handleLogout}
           sx={{ 
-            borderRadius: 2,
-            bgcolor: theme.palette.error.light,
-            color: theme.palette.error.dark,
+            borderRadius: 1,
+            py: 1,
+            color: 'rgba(255, 255, 255, 0.7)',
             '&:hover': {
-              bgcolor: alpha(theme.palette.error.light, 0.8),
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
             }
           }}
         >
-          <ListItemIcon sx={{ minWidth: 40, color: theme.palette.error.dark }}>
+          <ListItemIcon sx={{ minWidth: 40, color: 'rgba(255, 255, 255, 0.7)' }}>
             <LogoutIcon />
           </ListItemIcon>
           <ListItemText 
-            primary="Déconnexion" 
+            primary="Sign Out" 
             primaryTypographyProps={{ 
               fontSize: '0.875rem', 
-              fontWeight: 600 
+              fontWeight: 400 
             }} 
           />
         </ListItemButton>
@@ -241,19 +223,29 @@ const AppLayout = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', width: '100vw', maxWidth: '100%', overflowX: 'hidden', bgcolor: '#ffffff' }}>
       <CssBaseline />
       <AppBar
         position="fixed"
         elevation={0}
-        sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-          bgcolor: '#fff',
-          borderBottom: `1px solid ${theme.palette.divider}`
+        sx={{ 
+          width: { sm: `calc(100% - ${drawerWidth + 16}px)` }, 
+          ml: { sm: `${drawerWidth + 16}px` },
+          bgcolor: '#ffffff',
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          boxShadow: 'none'
         }}
       >
-        <Toolbar>
+        <Toolbar
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: [1, 2],
+            py: 1,
+            bgcolor: 'transparent'
+          }}
+        >
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -265,100 +257,57 @@ const AppLayout = () => {
           </IconButton>
           
           <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-            <Typography 
-              variant="h6" 
-              noWrap 
-              component="div" 
-              sx={{ 
-                display: { xs: 'none', sm: 'block' }, 
-                color: theme.palette.text.primary,
-                fontWeight: 600
-              }}
-            >
-              {filteredMenuItems.find(item => item.path === location.pathname)?.text || 'Tableau de bord'}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {location.pathname !== '/dashboard' && (
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  onClick={() => navigate('/dashboard')}
+                  sx={{ 
+                    mr: 1,
+                    color: theme.palette.text.secondary,
+                    '&:hover': {
+                      bgcolor: 'rgba(0, 0, 0, 0.04)'
+                    }
+                  }}
+                >
+                  <ArrowBackIcon fontSize="small" />
+                </IconButton>
+              )}
+              <Typography 
+                variant="subtitle1" 
+                noWrap 
+                component="div" 
+                sx={{ 
+                  display: { xs: 'none', sm: 'block' }, 
+                  color: theme.palette.text.secondary,
+                  fontWeight: 400,
+                  fontSize: '0.875rem'
+                }}
+              >
+                / {filteredMenuItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
+              </Typography>
+            </Box>
             
             <Box sx={{ flexGrow: 1 }} />
             
-            <Box 
-              onClick={handleOpenUserMenu}
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                cursor: 'pointer',
-                p: '4px 8px',
-                borderRadius: 2,
-                '&:hover': {
-                  bgcolor: theme.palette.grey[100]
-                }
-              }}
-            >
-              <Avatar 
-                sx={{ 
-                  width: 32, 
-                  height: 32,
-                  bgcolor: theme.palette.primary.main,
-                  color: '#fff',
-                  fontSize: '0.875rem',
-                  fontWeight: 600
-                }}
-              >
-                {user?.first_name?.[0]}{user?.last_name?.[0]}
-              </Avatar>
-              {!isMobile && (
-                <>
-                  <Box sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                      {user?.first_name} {user?.last_name}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary, lineHeight: 1.2 }}>
-                      {user?.role === 'MANAGER' ? 'Manager' : 'Agent'}
-                    </Typography>
-                  </Box>
-                  <KeyboardArrowDownIcon sx={{ color: theme.palette.text.secondary, ml: 0.5 }} />
-                </>
-              )}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton size="small" sx={{ mx: 0.5, color: '#757575' }} onClick={handleLogout}>
+                <LogoutIcon fontSize="small" />
+              </IconButton>
             </Box>
-            
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              <MenuItem onClick={() => {
-                handleCloseUserMenu();
-                navigate('/profile');
-              }}>
-                <Typography textAlign="center">Profil</Typography>
-              </MenuItem>
-              <MenuItem onClick={() => {
-                handleCloseUserMenu();
-                navigate('/settings');
-              }}>
-                <Typography textAlign="center">Paramètres</Typography>
-              </MenuItem>
-              <MenuItem onClick={handleLogout}>
-                <Typography textAlign="center">Déconnexion</Typography>
-              </MenuItem>
-            </Menu>
           </Box>
         </Toolbar>
       </AppBar>
       
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ 
+          width: { sm: drawerWidth }, 
+          flexShrink: { sm: 0 },
+          position: 'relative',
+          zIndex: 1200
+        }}
         aria-label="mailbox folders"
       >
         <Drawer
@@ -370,7 +319,14 @@ const AppLayout = () => {
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { 
+              boxSizing: 'border-box', 
+              width: drawerWidth,
+              borderRight: 'none',
+              bgcolor: 'transparent',
+              backgroundImage: 'none',
+              boxShadow: 'none'
+            },
           }}
         >
           {drawer}
@@ -382,8 +338,11 @@ const AppLayout = () => {
             '& .MuiDrawer-paper': { 
               boxSizing: 'border-box', 
               width: drawerWidth,
-              borderRight: `1px solid ${theme.palette.divider}`,
-              bgcolor: '#fff'
+              borderRight: 'none',
+              bgcolor: 'transparent',
+              color: 'white',
+              backgroundImage: 'none',
+              boxShadow: 'none'
             },
           }}
           open
@@ -396,17 +355,17 @@ const AppLayout = () => {
         component="main"
         sx={{ 
           flexGrow: 1, 
-          p: 3, 
+          p: { xs: 2, sm: 3 }, 
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          bgcolor: theme.palette.grey[50],
+          maxWidth: '100%',
+          bgcolor: 'transparent',
           minHeight: '100vh',
-          position: 'relative'
+          position: 'relative',
+          overflowX: 'hidden',
+          ml: { sm: 2 }
         }}
       >
-        <Toolbar />
-        {location.pathname !== '/dashboard' && (
-          <BackToHomeButton color="primary" />
-        )}
+        <Toolbar sx={{ bgcolor: 'transparent' }} />
         <Outlet />
       </Box>
     </Box>

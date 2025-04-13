@@ -19,6 +19,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import PeopleIcon from '@mui/icons-material/People';
+import TableViewIcon from '@mui/icons-material/TableView';
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -66,6 +67,14 @@ const DashboardPage = () => {
       path: '/users',
       roles: ['MANAGER'],
       color: theme.palette.secondary.main
+    },
+    {
+      title: 'Table des commandes',
+      description: 'Visualiser et gérer toutes les commandes',
+      icon: <TableViewIcon fontSize="large" />,
+      path: '/orders-table',
+      roles: ['MANAGER'],
+      color: theme.palette.error.main
     }
   ];
 
@@ -75,8 +84,8 @@ const DashboardPage = () => {
   );
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column' }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, width: '100%' }}>
+      <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', bgcolor: '#ffffff', boxShadow: 'none' }}>
         <Box sx={{ mb: 4 }}>
           <Typography variant="h6" color="textSecondary" gutterBottom>
             Bienvenue, {user?.first_name} {user?.last_name}!

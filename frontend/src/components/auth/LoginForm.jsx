@@ -68,17 +68,12 @@ const LoginForm = () => {
   };
 
   return (
-    <Paper 
-      elevation={2} 
+    <Box 
       sx={{ 
-        p: 4, 
         display: 'flex', 
         flexDirection: 'column', 
         alignItems: 'center',
-        borderRadius: 3,
-        maxWidth: 450,
-        width: '100%',
-        mx: 'auto'
+        width: '100%'
       }}
     >
       <Box 
@@ -92,12 +87,12 @@ const LoginForm = () => {
         <Avatar 
           sx={{ 
             mb: 2, 
-            bgcolor: theme.palette.primary.main,
+            bgcolor: '#FF8C00', // Couleur orange
             width: 56,
             height: 56
           }}
         >
-          <LockOutlinedIcon fontSize="large" />
+          <LockOutlinedIcon fontSize="large" sx={{ color: '#FFFFFF' }} />
         </Avatar>
         <Typography component="h1" variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
           Connexion
@@ -201,7 +196,11 @@ const LoginForm = () => {
             py: 1.5,
             borderRadius: 2,
             fontWeight: 600,
-            boxShadow: theme.shadows[3]
+            boxShadow: theme.shadows[3],
+            bgcolor: '#FF8C00', // Couleur orange
+            '&:hover': {
+              bgcolor: '#E67E00' // Orange légèrement plus foncé pour l'effet hover
+            }
           }}
         >
           {loading ? <CircularProgress size={24} /> : 'Se connecter'}
@@ -232,7 +231,7 @@ const LoginForm = () => {
           </Box>
         </Stack>
       </Box>
-    </Paper>
+    </Box>
   );
 };
 

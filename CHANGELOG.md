@@ -1,5 +1,41 @@
 # Changelog - Application de Gestion de Commandes Interne
 
+## [Version 0.6.0] - 2025-04-13
+
+### Ajouts
+- Création d'un nouveau module "Table des commandes" exclusivement pour les managers
+- Ajout d'un filtrage avancé par date et par statut dans la table des commandes
+- Implémentation de la sélection multiple et suppression groupée de commandes
+- Ajout d'une vue détaillée pour chaque commande avec toutes les informations de son cycle de vie
+- Intégration du module "Table des commandes" dans le menu latéral et sur le tableau de bord
+
+### Modifications
+- Modification des vues backend pour permettre aux agents de voir toutes les commandes à contrôler, quel que soit le préparateur
+- Modification des vues backend pour permettre aux agents de voir toutes les commandes à emballer, quel que soit le contrôleur
+- Changement de la couleur du statut "Emballée" de bleu à violet pour une meilleure distinction visuelle
+
+### Améliorations
+- Amélioration de l'interface de filtrage pour maintenir les contrôles visibles même lorsqu'aucun résultat n'est trouvé
+- Optimisation de l'expérience utilisateur avec des messages clairs et des actions contextuelles
+- Meilleure gestion des états vides et des messages d'information
+
+## [Version 0.5.0] - 2025-04-13
+
+### Améliorations UI/UX
+- Refonte complète de l'interface utilisateur avec un design moderne et épuré
+- Modification de la barre latérale pour un style flottant avec coins arrondis
+- Remplacement du logo "Material Dashboard 2" par le logo GFC
+- Changement de la couleur de fond de la barre latérale en gris (#424242)
+- Uniformisation des couleurs de fond pour tous les éléments de l'interface
+- Amélioration du contraste et de la lisibilité des éléments de menu
+- Optimisation de l'affichage en mode mobile
+- Suppression des ombres inutiles pour un design plus plat et moderne
+
+### Modifications techniques
+- Restructuration des composants Paper pour utiliser la pleine largeur de l'écran
+- Ajustement des marges et des espacements pour une meilleure utilisation de l'espace
+- Amélioration de la cohérence visuelle entre les différentes pages de l'application
+
 ## [Version 0.4.8] - 2025-04-03
 
 ### Ajouts

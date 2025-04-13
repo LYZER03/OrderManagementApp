@@ -176,17 +176,17 @@ const PreparationPage = () => {
         mt: isMobile ? 2 : 4, 
         mb: isMobile ? 2 : 4, 
         px: isMobile ? 1 : 3,
-        display: 'flex',
-        justifyContent: 'flex-end'
+        width: '100%'
       }}
     >
       <Paper 
         sx={{ 
           p: isMobile ? 2 : 3,
           width: '100%',
-          maxWidth: '900px',
-          ml: isMobile ? 3 : 4, // Marge à gauche plus grande en mode mobile
-          mt: isMobile ? 2 : 0  // Marge supérieure en mode mobile
+          maxWidth: '100%',
+          mt: isMobile ? 2 : 0,  // Marge supérieure en mode mobile
+          bgcolor: '#ffffff',
+          boxShadow: 'none'
         }}
       >
         <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>

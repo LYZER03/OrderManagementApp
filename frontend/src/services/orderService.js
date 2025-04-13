@@ -137,6 +137,28 @@ const orderService = {
       console.error(`Erreur lors de la mise à jour de la commande ${orderId}`, error);
       throw error;
     }
+  },
+
+  // Récupérer toutes les commandes (pour les managers)
+  getAllOrders: async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/orders/`);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération de toutes les commandes', error);
+      throw error;
+    }
+  },
+
+  // Supprimer une ou plusieurs commandes
+  deleteOrders: async (orderIds) => {
+    try {
+      const response = await axios.post(`${API_BASE}/orders/delete/`, { order_ids: orderIds });
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la suppression des commandes', error);
+      throw error;
+    }
   }
 };
 

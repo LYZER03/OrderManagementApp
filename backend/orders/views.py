@@ -7,6 +7,7 @@ from .models import Order
 from .serializers import OrderSerializer, OrderCreateSerializer, OrderUpdateSerializer
 from authentication.models import User
 from django.db.models import Q
+from rest_framework.decorators import permission_classes
 
 # Create your views here.
 class OrderListCreateView(APIView):
@@ -122,10 +123,8 @@ class ControlView(APIView):
     
     def get(self, request):
         # Get orders in PREPARED status
-        if request.user.is_manager():
-            orders = Order.objects.filter(status='PREPARED').order_by('-prepared_at')
-        else:
-            orders = Order.objects.filter(status='PREPARED', preparer=request.user).order_by('-prepared_at')
+        # Tous les utilisateurs (agents et managers) peuvent voir toutes les commandes préparées
+        orders = Order.objects.filter(status='PREPARED').order_by('-prepared_at')
         
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
@@ -151,10 +150,8 @@ class PackingView(APIView):
     
     def get(self, request):
         # Get orders in CONTROLLED status
-        if request.user.is_manager():
-            orders = Order.objects.filter(status='CONTROLLED').order_by('-controlled_at')
-        else:
-            orders = Order.objects.filter(status='CONTROLLED', controller=request.user).order_by('-controlled_at')
+        # Tous les utilisateurs (agents et managers) peuvent voir toutes les commandes contrôlées
+        orders = Order.objects.filter(status='CONTROLLED').order_by('-controlled_at')
         
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
@@ -192,6 +189,36 @@ class OrderReferenceView(APIView):
             return Response(serializer.data)
         except Order.DoesNotExist:
             return Response({"error": "Commande non trouvée"}, status=status.HTTP_404_NOT_FOUND)
+
+class OrderBulkDeleteView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def post(self, request):
+        # Only managers can bulk delete orders
+        if not request.user.is_manager():
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get order IDs from request data
+        order_ids = request.data.get('order_ids', [])
+        
+        if not order_ids:
+            return Response({"error": "Aucune commande à supprimer"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Delete orders
+        deleted_count = 0
+        for order_id in order_ids:
+            try:
+                order = Order.objects.get(pk=order_id)
+                order.delete()
+                deleted_count += 1
+            except Order.DoesNotExist:
+                pass
+        
+        return Response({
+            "message": f"{deleted_count} commande(s) supprimée(s) avec succès",
+            "deleted_count": deleted_count
+        })
+
 
 class DashboardView(APIView):
     permission_classes = (permissions.IsAuthenticated,)

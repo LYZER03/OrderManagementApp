@@ -18,6 +18,7 @@ import ControlPage from './pages/ControlPage';
 import PackingPage from './pages/PackingPage';
 import StatisticsPage from './pages/StatisticsPage';
 import UsersPage from './pages/UsersPage';
+import OrdersTablePage from './pages/OrdersTablePage';
 
 function App() {
   // Tests d'authentification désactivés pour éviter les connexions automatiques
@@ -53,6 +54,7 @@ function App() {
               <Route element={<AppLayout />}>
                 <Route path="/statistics" element={<StatisticsPage />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/orders-table" element={<OrdersTablePage />} />
                 <Route path="/profile" element={<div>Page de profil (à implémenter)</div>} />
                 <Route path="/settings" element={<div>Page de paramètres (à implémenter)</div>} />
               </Route>
