@@ -9,7 +9,7 @@ L'application est divisée en deux parties principales :
 ### Backend (Django)
 
 - **Framework** : Django avec Django REST Framework
-- **Base de données** : SQLite (par défaut, configurable pour PostgreSQL ou MySQL en production)
+- **Base de données** : PostgreSQL via Supabase (migration depuis SQLite)
 - **Authentification** : JWT (JSON Web Tokens)
 - **Sécurité** : Protection CSRF, gestion des sessions, permissions basées sur les rôles
 
@@ -92,7 +92,37 @@ L'application est divisée en deux parties principales :
    pip install -r requirements.txt
    ```
 
-5. Appliquer les migrations
+5. Configuration du fichier .env
+   
+   Créez un fichier `.env` dans le dossier `backend` avec les variables suivantes :
+
+   ```
+   # Configuration Django
+   SECRET_KEY=votre_clé_secrète_django
+   DEBUG=True
+   ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,192.168.1.16
+
+   # Configuration de la base de données PostgreSQL (Supabase)
+   DATABASE_URL=postgres://user:password@host:port/database
+   
+   # Si vous préférez configurer manuellement :
+   DB_ENGINE=django.db.backends.postgresql
+   DB_NAME=nom_de_votre_base
+   DB_USER=utilisateur_db
+   DB_PASSWORD=mot_de_passe_db
+   DB_HOST=host_db
+   DB_PORT=5432
+
+   # Configuration JWT
+   JWT_SECRET_KEY=votre_clé_secrète_jwt
+   JWT_ALGORITHM=HS256
+   JWT_ACCESS_TOKEN_LIFETIME=24
+   JWT_REFRESH_TOKEN_LIFETIME=7
+   ```
+
+   **Note importante :** Ne jamais commiter ce fichier dans Git. Il est déjà inclus dans le `.gitignore`.
+
+6. Appliquer les migrations
    ```
    python manage.py migrate
    ```
@@ -119,9 +149,27 @@ L'application est divisée en deux parties principales :
    npm install
    ```
 
-3. Lancer l'application
+3. Configuration du fichier .env (optionnel)
+   
+   Si vous souhaitez personnaliser l'URL de l'API ou d'autres paramètres, créez un fichier `.env` dans le dossier `frontend` :
+
+   ```
+   # URL de l'API backend
+   REACT_APP_API_URL=http://localhost:8000/api
+   
+   # Autres configurations
+   REACT_APP_ENABLE_MOCK_DATA=false
+   REACT_APP_DEFAULT_PAGE_SIZE=20
+   ```
+
+4. Lancer l'application
    ```
    npm start
+   ```
+
+   Pour rendre l'application accessible depuis d'autres appareils sur le réseau local :
+   ```
+   npm start -- --host 0.0.0.0
    ```
 
 ## Utilisation

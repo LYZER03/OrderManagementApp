@@ -12,47 +12,106 @@ const OrdersTablePage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 20,
+    totalCount: 0,
+    totalPages: 0
+  });
+  const [filters, setFilters] = useState({
+    status: '',
+    startDate: null,
+    endDate: null,
+    ordering: '-created_at'
+  });
 
   // Rediriger si l'utilisateur n'est pas un manager
   if (!user || user.role !== 'MANAGER') {
     return <Navigate to="/" replace />;
   }
 
-  // Charger toutes les commandes
-  useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = await orderService.getAllOrders();
-        console.log('Données reçues du serveur:', data);
-        
-        setOrders(data);
-      } catch (err) {
-        console.error('Erreur lors du chargement des commandes', err);
-        setError('Impossible de charger les commandes. Veuillez réessayer.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fonction pour charger les commandes avec pagination et filtrage
+  const fetchOrders = async (page = 1, pageSize = 20, filters = {}) => {
+    setLoading(true);
+    setError('');
+    try {
+      // Préparer les paramètres de requête
+      const params = {
+        page: page,
+        page_size: pageSize,
+        ordering: filters.ordering || '-created_at'
+      };
+      
+      // Ajouter les filtres s'ils sont définis
+      if (filters.status) params.status = filters.status;
+      if (filters.startDate) params.start_date = filters.startDate.toISOString();
+      if (filters.endDate) params.end_date = filters.endDate.toISOString();
+      
+      // Effectuer la requête
+      const data = await orderService.getAllOrders(params);
+      console.log('Données reçues du serveur:', data);
+      
+      // Mettre à jour les états
+      setOrders(data.results);
+      setPagination({
+        page: data.page,
+        pageSize: data.page_size,
+        totalCount: data.count,
+        totalPages: data.total_pages
+      });
+    } catch (err) {
+      console.error('Erreur lors du chargement des commandes', err);
+      setError('Impossible de charger les commandes. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchOrders();
-  }, []);
+  // Charger les commandes au chargement initial et lors des changements de filtres/pagination
+  useEffect(() => {
+    fetchOrders(pagination.page, pagination.pageSize, filters);
+  }, [pagination.page, pagination.pageSize, filters]);
 
   // Fonction pour supprimer des commandes
   const handleDeleteOrders = async (orderIds) => {
     try {
       await orderService.deleteOrders(orderIds);
       
-      // Mettre à jour la liste des commandes après la suppression
-      const updatedOrders = orders.filter(order => !orderIds.includes(order.id));
-      setOrders(updatedOrders);
+      // Recharger les données après la suppression pour maintenir la cohérence
+      fetchOrders(pagination.page, pagination.pageSize, filters);
       
       return true;
     } catch (err) {
       console.error('Erreur lors de la suppression des commandes', err);
       throw err;
     }
+  };
+  
+  // Fonction pour changer de page
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({
+      ...prev,
+      page: newPage
+    }));
+  };
+  
+  // Fonction pour changer la taille de page
+  const handlePageSizeChange = (newPageSize) => {
+    setPagination(prev => ({
+      ...prev,
+      page: 1, // Retour à la première page lors du changement de taille
+      pageSize: newPageSize
+    }));
+  };
+  
+  // Fonction pour appliquer les filtres
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    // Retour à la première page lors de l'application des filtres
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
   };
 
   return (
@@ -90,7 +149,12 @@ const OrdersTablePage = () => {
           orders={orders}
           loading={loading}
           error={error}
+          pagination={pagination}
+          filters={filters}
           onDeleteOrders={handleDeleteOrders}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onFilterChange={handleFilterChange}
         />
       </Paper>
     </Container>

@@ -34,17 +34,23 @@ import { format, isAfter, isBefore, isEqual, parseISO } from 'date-fns';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import OrderDetailsDialog from './OrderDetailsDialog';
 
 const OrdersDataTable = ({ 
   orders, 
   loading, 
   error, 
-  onDeleteOrders 
+  pagination,
+  filters,
+  onDeleteOrders,
+  onPageChange,
+  onPageSizeChange,
+  onFilterChange
 }) => {
   const theme = useTheme();
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  // Utiliser les valeurs de pagination fournies par le parent
+  const { page, pageSize, totalCount, totalPages } = pagination;
   const [selected, setSelected] = useState([]);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -52,11 +58,15 @@ const OrdersDataTable = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const [openBulkDeleteDialog, setOpenBulkDeleteDialog] = useState(false);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [bulkDeleteError, setBulkDeleteError] = useState('');
+  const [bulkDeleteSuccess, setBulkDeleteSuccess] = useState(false);
+  const [bulkDeleteCount, setBulkDeleteCount] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
-  const [filteredOrders, setFilteredOrders] = useState(orders);
   
   // Liste des statuts possibles pour le filtrage
   const statusOptions = [
@@ -66,52 +76,31 @@ const OrdersDataTable = ({
     { value: 'PACKED', label: 'Emballée', color: 'secondary' }
   ];
 
-  // Effet pour mettre à jour les commandes filtrées lorsque les commandes ou les filtres changent
-  React.useEffect(() => {
-    let result = [...orders];
-    
-    // Appliquer le filtre de date si défini
-    if (startDate || endDate) {
-      result = result.filter(order => {
-        const orderDate = parseISO(order.created_at);
-        let matchesStart = true;
-        let matchesEnd = true;
-        
-        if (startDate) {
-          matchesStart = isAfter(orderDate, startDate) || isEqual(orderDate, startDate);
-        }
-        
-        if (endDate) {
-          matchesEnd = isBefore(orderDate, endDate) || isEqual(orderDate, endDate);
-        }
-        
-        return matchesStart && matchesEnd;
-      });
-    }
-    
-    // Appliquer le filtre de statut si défini
-    if (selectedStatus) {
-      result = result.filter(order => order.status === selectedStatus);
-    }
-    
-    setFilteredOrders(result);
-    
-    // Réinitialiser la page à 0 lorsque les filtres changent
-    setPage(0);
-  }, [orders, startDate, endDate, selectedStatus]);
+  // Appliquer les filtres côté serveur au lieu de côté client
+  const handleApplyFilters = () => {
+    // Envoyer les filtres au composant parent
+    onFilterChange({
+      status: selectedStatus,
+      startDate: startDate,
+      endDate: endDate,
+      ordering: filters.ordering
+    });
+  };
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    // Appeler la fonction du parent pour changer de page (1-indexed)
+    onPageChange(newPage + 1);
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    // Appeler la fonction du parent pour changer la taille de page
+    onPageSizeChange(parseInt(event.target.value, 10));
   };
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelected = filteredOrders.map((n) => n.id);
+      // Utiliser les commandes actuellement affichées sur la page
+      const newSelected = orders.map((n) => n.id);
       setSelected(newSelected);
       return;
     }
@@ -158,6 +147,18 @@ const OrdersDataTable = ({
     setDeleteError('');
     setDeleteSuccess(false);
   };
+  
+  const handleOpenBulkDeleteDialog = () => {
+    setOpenBulkDeleteDialog(true);
+    // Estimer le nombre de commandes qui seront supprimées
+    setBulkDeleteCount(totalCount);
+  };
+  
+  const handleCloseBulkDeleteDialog = () => {
+    setOpenBulkDeleteDialog(false);
+    setBulkDeleteError('');
+    setBulkDeleteSuccess(false);
+  };
 
   const handleDeleteSelected = async () => {
     setDeleteLoading(true);
@@ -182,6 +183,40 @@ const OrdersDataTable = ({
       setDeleteLoading(false);
     }
   };
+  
+  const handleBulkDelete = async () => {
+    setBulkDeleteLoading(true);
+    setBulkDeleteError('');
+    setBulkDeleteSuccess(false);
+    
+    try {
+      // Utiliser les filtres actuels pour la suppression en masse
+      const currentFilters = {
+        status: filters.status,
+        start_date: filters.startDate,
+        end_date: filters.endDate
+      };
+      
+      // Appeler le service pour supprimer en masse
+      const response = await orderService.bulkDeleteOrders(currentFilters);
+      
+      if (response) {
+        setBulkDeleteSuccess(true);
+        setSelected([]);
+        
+        // Fermer automatiquement après 1.5 secondes et rafraîchir les données
+        setTimeout(() => {
+          handleCloseBulkDeleteDialog();
+          // Rafraîchir les données en appelant onPageChange avec la page actuelle
+          onPageChange(page);
+        }, 1500);
+      }
+    } catch (err) {
+      setBulkDeleteError(err.response?.data?.error || 'Une erreur est survenue lors de la suppression en masse');
+    } finally {
+      setBulkDeleteLoading(false);
+    }
+  };
 
   const handleToggleFilter = () => {
     setFilterOpen(!filterOpen);
@@ -191,16 +226,25 @@ const OrdersDataTable = ({
     setStartDate(null);
     setEndDate(null);
     setSelectedStatus(null);
+    
+    // Appliquer immédiatement la réinitialisation des filtres
+    onFilterChange({
+      status: '',
+      startDate: null,
+      endDate: null,
+      ordering: '-created_at'
+    });
   };
   
   const handleStatusFilter = (status) => {
-    setSelectedStatus(status === selectedStatus ? null : status);
+    setSelectedStatus(status);
+    // Ne pas appliquer immédiatement, attendre que l'utilisateur clique sur "Appliquer"
   };
 
   const isSelected = (id) => selected.indexOf(id) !== -1;
 
-  // Éviter un layout jump quand la page change
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - filteredOrders.length) : 0;
+  // Calculer les lignes vides pour maintenir une hauteur constante
+  const emptyRows = Math.max(0, pageSize - orders.length);
 
   // Fonction pour obtenir le statut formaté
   const getStatusChip = (status) => {
@@ -277,16 +321,27 @@ const OrdersDataTable = ({
             >
               Filtres
             </Button>
-            <Button
-              variant="contained"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handleOpenDeleteDialog}
-              disabled={selected.length === 0}
-              size="small"
-            >
-              Supprimer ({selected.length})
-            </Button>
+            {selected.length > 0 ? (
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={handleOpenDeleteDialog}
+                size="small"
+              >
+                Supprimer ({selected.length})
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<DeleteSweepIcon />}
+                onClick={handleOpenBulkDeleteDialog}
+                size="small"
+              >
+                Suppression en masse
+              </Button>
+            )}
           </Stack>
         </Box>
 
@@ -334,23 +389,33 @@ const OrdersDataTable = ({
               <Button variant="outlined" size="small" onClick={handleClearFilters}>
                 Effacer tous les filtres
               </Button>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                size="small"
+                sx={{ ml: 1 }}
+                onClick={handleApplyFilters}
+              >
+                Appliquer
+              </Button>
             </Box>
           </Box>
         )}
 
         {/* Afficher un message si aucune commande n'est trouvée, mais garder l'interface de filtrage */}
-        {(!filteredOrders || filteredOrders.length === 0) ? (
+        {(!orders || orders.length === 0) ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <Alert severity="info" sx={{ mb: 3, maxWidth: '500px', mx: 'auto' }}>
               Aucune commande trouvée avec les critères de filtrage actuels.
               {!filterOpen && (
                 <Box sx={{ mt: 2 }}>
                   <Button 
-                    variant="outlined" 
-                    size="small" 
-                    onClick={handleClearFilters}
+                    variant="contained" 
+                    color="primary" 
+                    size="small"
+                    onClick={handleApplyFilters}
                   >
-                    Effacer les filtres
+                    Appliquer
                   </Button>
                 </Box>
               )}
@@ -369,8 +434,8 @@ const OrdersDataTable = ({
                     <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
-                        indeterminate={selected.length > 0 && selected.length < filteredOrders.length}
-                        checked={filteredOrders.length > 0 && selected.length === filteredOrders.length}
+                        indeterminate={selected.length > 0 && selected.length < orders.length}
+                        checked={orders.length > 0 && selected.length === orders.length}
                         onChange={handleSelectAllClick}
                         inputProps={{
                           'aria-label': 'select all orders',
@@ -387,9 +452,7 @@ const OrdersDataTable = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredOrders
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((order) => {
+                  {orders.map((order, index) => {
                       const isItemSelected = isSelected(order.id);
 
                       return (
@@ -449,11 +512,11 @@ const OrdersDataTable = ({
               </Table>
             </TableContainer>
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25, 50]}
+              rowsPerPageOptions={[10, 20, 50, 100]}
               component="div"
-              count={filteredOrders.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
+              count={totalCount}
+              rowsPerPage={pageSize}
+              page={page - 1} // TablePagination est 0-indexed, notre API est 1-indexed
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               labelRowsPerPage="Lignes par page:"
@@ -500,6 +563,58 @@ const OrdersDataTable = ({
             startIcon={deleteLoading ? <CircularProgress size={20} /> : null}
           >
             {deleteLoading ? 'Suppression...' : 'Supprimer'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Dialogue de confirmation de suppression en masse */}
+      <Dialog
+        open={openBulkDeleteDialog}
+        onClose={handleCloseBulkDeleteDialog}
+        aria-labelledby="bulk-delete-dialog-title"
+        aria-describedby="bulk-delete-dialog-description"
+      >
+        <DialogTitle id="bulk-delete-dialog-title" color="error">
+          Suppression en masse
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="bulk-delete-dialog-description">
+            <Typography variant="body1" fontWeight="bold" color="error" gutterBottom>
+              ATTENTION : Action critique
+            </Typography>
+            <Typography variant="body2" paragraph>
+              Vous êtes sur le point de supprimer <strong>toutes les commandes</strong> correspondant aux filtres actuels ({bulkDeleteCount} commandes).
+            </Typography>
+            <Typography variant="body2" paragraph>
+              Cette action est <strong>irréversible</strong> et supprimera définitivement les données.
+            </Typography>
+            <Typography variant="body2">
+              Êtes-vous absolument sûr de vouloir continuer ?
+            </Typography>
+          </DialogContentText>
+          {bulkDeleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {bulkDeleteError}
+            </Alert>
+          )}
+          {bulkDeleteSuccess && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              {bulkDeleteCount} commandes supprimées avec succès !
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseBulkDeleteDialog} disabled={bulkDeleteLoading} variant="outlined">
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleBulkDelete} 
+            color="error" 
+            variant="contained"
+            disabled={bulkDeleteLoading}
+            startIcon={bulkDeleteLoading ? <CircularProgress size={20} /> : <DeleteSweepIcon />}
+          >
+            {bulkDeleteLoading ? 'Suppression en cours...' : 'Confirmer la suppression en masse'}
           </Button>
         </DialogActions>
       </Dialog>

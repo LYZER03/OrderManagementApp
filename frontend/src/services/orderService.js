@@ -1,10 +1,9 @@
 import axios from 'axios';
 import authService from './authService';
+import config from '../config/api';
 
-//const API_URL = 'http://localhost:8000/api';
-const API_BASE = window.location.hostname === 'localhost' 
-  ? 'http://localhost:8000/api' 
-  : 'http://192.168.1.16:8000/api';
+// Utiliser l'URL API depuis la configuration centralisée
+const API_BASE = config.API_URL;
 
 // Configuration de l'intercepteur pour ajouter le token JWT à chaque requête
 axios.interceptors.request.use(
@@ -139,13 +138,56 @@ const orderService = {
     }
   },
 
-  // Récupérer toutes les commandes (pour les managers)
-  getAllOrders: async () => {
+  // Récupérer les commandes avec pagination et filtrage
+  getAllOrders: async (params = {}) => {
     try {
-      const response = await axios.get(`${API_BASE}/orders/`);
+      // Paramètres par défaut
+      const defaultParams = {
+        page: 1,
+        page_size: 20,
+        ordering: '-created_at'
+      };
+      
+      // Fusionner les paramètres par défaut avec ceux fournis
+      const queryParams = { ...defaultParams, ...params };
+      
+      // Construire l'URL avec les paramètres de requête
+      const queryString = Object.keys(queryParams)
+        .map(key => `${key}=${encodeURIComponent(queryParams[key])}`)
+        .join('&');
+      
+      const response = await axios.get(`${API_BASE}/orders/?${queryString}`);
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la récupération de toutes les commandes', error);
+      console.error('Erreur lors de la récupération des commandes', error);
+      throw error;
+    }
+  },
+
+  getStats: async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/dashboard/`);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques', error);
+      throw error;
+    }
+  },
+  
+  // Supprimer en masse les commandes selon les filtres actuels
+  bulkDeleteOrders: async (filters = {}) => {
+    try {
+      // Construire l'URL avec les paramètres de filtrage
+      const queryString = Object.keys(filters)
+        .filter(key => filters[key] !== null && filters[key] !== undefined)
+        .map(key => `${key}=${encodeURIComponent(filters[key])}`)
+        .join('&');
+      
+      const url = queryString ? `${API_BASE}/orders/?${queryString}` : `${API_BASE}/orders/`;
+      const response = await axios.delete(url);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la suppression en masse des commandes', error);
       throw error;
     }
   },
