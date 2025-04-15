@@ -1,5 +1,32 @@
 # Changelog - Application de Gestion de Commandes Interne
 
+## [Version 0.9.0] - 2025-04-15
+
+### Optimisations de performance
+- Implémentation du filtrage par date côté serveur pour réduire le temps de chargement initial
+- Limitation par défaut des données chargées aux commandes du jour uniquement
+- Optimisation des requêtes API pour supporter les filtres de plage de dates
+- Amélioration des performances pour les grands volumes de données
+
+### Améliorations de l'interface utilisateur
+- Centralisation de tous les filtres dans un panneau unique et cohérent
+- Ajout d'un filtre par créateur de commande dans le tableau des commandes
+- Implémentation d'un sélecteur de plage de dates (date de début et date de fin)
+- Simplification de l'interface utilisateur en supprimant les filtres redondants
+- Amélioration de la cohérence visuelle entre les différents modules
+
+### Nouveaux outils
+- Création d'un script pour générer de grands jeux de données de test
+- Ajout d'options pour générer des commandes historiques ou du jour
+- Création d'un script pour supprimer toutes les commandes de la base de données
+- Amélioration des outils de développement pour faciliter les tests
+
+### Corrections
+- Correction des problèmes d'affichage dans le sélecteur de date personnalisée
+- Harmonisation de l'affichage des noms de créateurs dans les filtres et les tableaux
+- Suppression des indicateurs redondants "Commandes d'aujourd'hui uniquement"
+- Correction de divers bugs mineurs d'interface utilisateur
+
 ## [Version 0.8.1] - 2025-04-13
 
 ### Améliorations

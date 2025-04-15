@@ -40,6 +40,8 @@ L'application est divisée en deux parties principales :
 - Formulaire d'ajout de nouvelles commandes
 - Boutons d'action : Valider/Modifier/Supprimer
 - Restriction de visibilité : agents limités à leurs propres commandes
+- Filtrage par date pour améliorer les performances
+- Affichage par défaut des commandes du jour
 
 ### Module Contrôle
 
@@ -47,6 +49,8 @@ L'application est divisée en deux parties principales :
 - Barre de recherche par numéro de référence
 - Bouton "Valider le contrôle" (désactivé si non préparé)
 - Calcul automatique du temps de préparation
+- Filtrage par date pour améliorer les performances
+- Affichage par défaut des commandes du jour
 
 ### Module Emballage
 
@@ -54,6 +58,8 @@ L'application est divisée en deux parties principales :
 - Barre de recherche par numéro de référence
 - Bouton "Valider l'emballage" (désactivé si non contrôlé)
 - Calcul automatique du temps de contrôle
+- Filtrage par date pour améliorer les performances
+- Affichage par défaut des commandes du jour
 
 ### Dashboard Manager
 
@@ -61,6 +67,23 @@ L'application est divisée en deux parties principales :
 - Monitoring des agents (liste des agents, charge de travail)
 - Visualisations graphiques (performance des équipes, évolution dans le temps)
 - Filtres temporels (jour/semaine/mois)
+- Optimisation des performances avec filtrage par date côté serveur
+- Affichage par défaut des commandes du jour pour un chargement rapide
+
+## Système de filtrage avancé
+
+- Filtrage par date (date de début et date de fin)
+- Filtrage par statut (Créée, Préparée, Contrôlée, Emballée)
+- Filtrage par créateur (tous les agents disponibles)
+- Combinaison de filtres pour des recherches précises
+- Optimisation des performances avec filtrage côté serveur
+
+## Outils de génération de données
+
+- Script de génération de jeux de données volumineux
+- Options pour générer des commandes historiques ou du jour
+- Paramétrage du nombre de commandes et de leur distribution
+- Script de suppression des commandes pour nettoyer la base de données
 
 ## Installation
 
