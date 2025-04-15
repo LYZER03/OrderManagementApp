@@ -1,7 +1,7 @@
 from django.urls import path
+from .views_date_range import OrderListCreateView
 from .views import (
-    OrderListCreateView, OrderDetailView,
-    PreparationView, ControlView, PackingView,
+    OrderDetailView, PreparationView, ControlView, PackingView,
     DashboardView, OrderReferenceView, OrderBulkDeleteView
 )
 

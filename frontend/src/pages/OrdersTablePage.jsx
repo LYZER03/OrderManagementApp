@@ -1,9 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Paper, Typography, Box, Alert, useTheme, useMediaQuery, Divider } from '@mui/material';
+import { 
+  Container, 
+  Paper, 
+  Typography, 
+  Box, 
+  Alert, 
+  useTheme, 
+  useMediaQuery, 
+  Divider, 
+  Button,
+  ButtonGroup,
+  Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Stack
+} from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import IconButton from '@mui/material/IconButton';
+import { fr } from 'date-fns/locale';
+import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import OrdersDataTable from '../components/ordersTable/OrdersDataTable';
 import orderService from '../services/orderService';
+import TodayIcon from '@mui/icons-material/Today';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 const OrdersTablePage = () => {
   const { user } = useAuth();
@@ -12,53 +39,26 @@ const OrdersTablePage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [pagination, setPagination] = useState({
-    page: 1,
-    pageSize: 20,
-    totalCount: 0,
-    totalPages: 0
-  });
-  const [filters, setFilters] = useState({
-    status: '',
-    startDate: null,
-    endDate: null,
-    ordering: '-created_at'
-  });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   // Rediriger si l'utilisateur n'est pas un manager
   if (!user || user.role !== 'MANAGER') {
     return <Navigate to="/" replace />;
   }
 
-  // Fonction pour charger les commandes avec pagination et filtrage
-  const fetchOrders = async (page = 1, pageSize = 20, filters = {}) => {
+  // Fonction pour charger les commandes
+  const fetchOrders = async () => {
     setLoading(true);
     setError('');
     try {
-      // Préparer les paramètres de requête
-      const params = {
-        page: page,
-        page_size: pageSize,
-        ordering: filters.ordering || '-created_at'
-      };
-      
-      // Ajouter les filtres s'ils sont définis
-      if (filters.status) params.status = filters.status;
-      if (filters.startDate) params.start_date = filters.startDate.toISOString();
-      if (filters.endDate) params.end_date = filters.endDate.toISOString();
-      
-      // Effectuer la requête
-      const data = await orderService.getAllOrders(params);
+      // Charger toutes les commandes sans filtre de date par défaut
+      console.log('Chargement de toutes les commandes');
+      const data = await orderService.getAllOrders('all');
       console.log('Données reçues du serveur:', data);
       
-      // Mettre à jour les états
-      setOrders(data.results);
-      setPagination({
-        page: data.page,
-        pageSize: data.page_size,
-        totalCount: data.count,
-        totalPages: data.total_pages
-      });
+      setOrders(data);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Erreur lors du chargement des commandes', err);
       setError('Impossible de charger les commandes. Veuillez réessayer.');
@@ -66,52 +66,35 @@ const OrdersTablePage = () => {
       setLoading(false);
     }
   };
+  
 
-  // Charger les commandes au chargement initial et lors des changements de filtres/pagination
+
+  // Charger les commandes lors d'un rafraîchissement
   useEffect(() => {
-    fetchOrders(pagination.page, pagination.pageSize, filters);
-  }, [pagination.page, pagination.pageSize, filters]);
+    fetchOrders();
+  }, [refreshTrigger]);
+  
+
+  
+  // Gérer le rafraîchissement des données
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   // Fonction pour supprimer des commandes
   const handleDeleteOrders = async (orderIds) => {
     try {
       await orderService.deleteOrders(orderIds);
       
-      // Recharger les données après la suppression pour maintenir la cohérence
-      fetchOrders(pagination.page, pagination.pageSize, filters);
+      // Mettre à jour la liste des commandes après la suppression
+      const updatedOrders = orders.filter(order => !orderIds.includes(order.id));
+      setOrders(updatedOrders);
       
       return true;
     } catch (err) {
       console.error('Erreur lors de la suppression des commandes', err);
       throw err;
     }
-  };
-  
-  // Fonction pour changer de page
-  const handlePageChange = (newPage) => {
-    setPagination(prev => ({
-      ...prev,
-      page: newPage
-    }));
-  };
-  
-  // Fonction pour changer la taille de page
-  const handlePageSizeChange = (newPageSize) => {
-    setPagination(prev => ({
-      ...prev,
-      page: 1, // Retour à la première page lors du changement de taille
-      pageSize: newPageSize
-    }));
-  };
-  
-  // Fonction pour appliquer les filtres
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-    // Retour à la première page lors de l'application des filtres
-    setPagination(prev => ({
-      ...prev,
-      page: 1
-    }));
   };
 
   return (
@@ -134,14 +117,38 @@ const OrdersTablePage = () => {
           boxShadow: 'none'
         }}
       >
-        <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
-          Table des commandes
-        </Typography>
-        {!isMobile && (
-          <Typography variant="body1" paragraph>
-            Cette page permet de visualiser, filtrer et gérer toutes les commandes du système.
-          </Typography>
-        )}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+          <Box>
+            <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
+              Table des commandes
+            </Typography>
+            {!isMobile && (
+              <Typography variant="body1">
+                Cette page permet de visualiser, filtrer et gérer les commandes du système.
+              </Typography>
+            )}
+          </Box>
+          
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="caption" color="text.secondary">
+              Dernière mise à jour: {format(lastUpdated, 'dd/MM/yyyy HH:mm:ss')}
+            </Typography>
+            
+            <Tooltip title="Rafraîchir les données">
+              <Button 
+                variant="outlined" 
+                color="primary" 
+                onClick={handleRefresh}
+                startIcon={<RefreshIcon />}
+                size={isMobile ? "small" : "medium"}
+              >
+                {isMobile ? '' : 'Rafraîchir'}
+              </Button>
+            </Tooltip>
+          </Stack>
+        </Box>
+        
+
         
         <Divider sx={{ my: 2 }} />
         
@@ -149,12 +156,7 @@ const OrdersTablePage = () => {
           orders={orders}
           loading={loading}
           error={error}
-          pagination={pagination}
-          filters={filters}
           onDeleteOrders={handleDeleteOrders}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          onFilterChange={handleFilterChange}
         />
       </Paper>
     </Container>

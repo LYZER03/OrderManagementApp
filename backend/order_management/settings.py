@@ -12,12 +12,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import os
-import dj_database_url
-from dotenv import load_dotenv
-
-# Charger les variables d'environnement
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-1x7!z=#5+2f7#(%*00^u297x1f6i=i%mtct66^f%ws-1t@!4oa')
+SECRET_KEY = 'django-insecure-1x7!z=#5+2f7#(%*00^u297x1f6i=i%mtct66^f%ws-1t@!4oa'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')
+ALLOWED_HOSTS = ['192.168.1.16', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -89,18 +83,12 @@ WSGI_APPLICATION = 'order_management.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Configuration par défaut (SQLite) comme fallback
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-# Utiliser PostgreSQL si DATABASE_URL est défini dans les variables d'environnement
-database_url = os.getenv('DATABASE_URL')
-if database_url:
-    DATABASES['default'] = dj_database_url.parse(database_url)
 
 
 # Password validation

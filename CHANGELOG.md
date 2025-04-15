@@ -1,25 +1,5 @@
 # Changelog - Application de Gestion de Commandes Interne
 
-## [Version 0.9.0] - 2025-04-13
-
-### Améliorations majeures
-- Migration de la base de données de SQLite vers PostgreSQL (Supabase) pour améliorer les performances
-- Optimisation des requêtes pour la gestion de grands volumes de données (30 000 commandes)
-- Configuration de l'accès réseau pour permettre l'utilisation de l'application depuis différents appareils
-- Centralisation de la configuration API dans le frontend pour une meilleure maintenance
-
-### Optimisations de performance
-- Réduction du temps de chargement des pages statistiques de 80-90%
-- Utilisation d'agrégations au niveau de la base de données pour les calculs statistiques
-- Implémentation de requêtes optimisées pour les graphiques et tableaux de bord
-- Réduction de la consommation mémoire côté client
-
-### Modifications techniques
-- Ajout des dépendances PostgreSQL (psycopg2-binary, dj-database-url, python-dotenv, pytz)
-- Configuration des variables d'environnement pour les paramètres de connexion à la base de données
-- Création d'un script de génération de données réalistes (30 000 commandes avec répartition précise)
-- Amélioration de la gestion des fuseaux horaires avec pytz
-
 ## [Version 0.8.1] - 2025-04-13
 
 ### Améliorations

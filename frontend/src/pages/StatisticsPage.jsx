@@ -72,8 +72,11 @@ const StatisticsPage = () => {
     try {
       console.log('Chargement des statistiques...');
       
+      // Utiliser 'today' comme paramètre de date par défaut
+      const dateParam = 'today';
+      
       // Charger d'abord les statistiques générales pour vérifier la connexion
-      const generalStatsData = await statsService.getGeneralStats();
+      const generalStatsData = await statsService.getGeneralStats(dateParam);
       console.log('Statistiques générales chargées:', generalStatsData);
       
       // Puis charger le reste des données
@@ -85,12 +88,12 @@ const StatisticsPage = () => {
         completedTasksData,
         recentOrdersData
       ] = await Promise.all([
-        statsService.getOrdersByStatus(),
+        statsService.getOrdersByStatus(dateParam),
         statsService.getProcessingTimeByStep(),
-        statsService.getAgentPerformance(),
-        statsService.getDailySales(),
-        statsService.getCompletedTasks(),
-        statsService.getRecentOrders()
+        statsService.getAgentPerformance(dateParam),
+        statsService.getDailySales(dateParam),
+        statsService.getCompletedTasks(dateParam),
+        statsService.getRecentOrders(dateParam)
       ]);
       
       // Mettre à jour les états avec les données récupérées
@@ -200,8 +203,8 @@ const StatisticsPage = () => {
       </Box>
       
       {/* Cartes de statistiques générales */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
-        <Box>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <StatCard 
             icon={<ShoppingCartIcon />} 
             title="Commandes totales" 
@@ -210,8 +213,8 @@ const StatisticsPage = () => {
             changeText="depuis la semaine dernière" 
             color="primary"
           />
-        </Box>
-        <Box>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
           <StatCard 
             icon={<PendingActionsIcon />} 
             title="En cours" 
@@ -220,8 +223,8 @@ const StatisticsPage = () => {
             changeText="depuis le mois dernier" 
             color="info"
           />
-        </Box>
-        <Box>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
           <StatCard 
             icon={<CheckCircleIcon />} 
             title="Complétées" 
@@ -230,8 +233,8 @@ const StatisticsPage = () => {
             changeText="depuis hier" 
             color="success"
           />
-        </Box>
-        <Box>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
           <StatCard 
             icon={<TrendingUpIcon />} 
             title="Croissance" 
@@ -239,13 +242,13 @@ const StatisticsPage = () => {
             lastUpdated="Juste mis à jour" 
             color="warning"
           />
-        </Box>
-      </Box>
+        </Grid>
+      </Grid>
       
       {/* Graphiques et tableaux */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, px: 0 }}>
+      <Grid container spacing={4} sx={{ px: 0 }}>
         {/* Graphique des ventes quotidiennes */}
-        <Box>
+        <Grid item xs={12}>
           <LineChartCard 
             title="Commandes mensuelles" 
             subtitle={`${dailySales.reduce((sum, item) => sum + item.sales, 0)} commandes créées au total`} 
@@ -256,10 +259,10 @@ const StatisticsPage = () => {
             height={350}
             width="95%"
           />
-        </Box>
+        </Grid>
         
         {/* Graphique des tâches complétées */}
-        <Box>
+        <Grid item xs={12}>
           <LineChartCard 
             title="Commandes emballées" 
             subtitle={`${completedTasks.reduce((sum, item) => sum + item.tasks, 0)} commandes emballées au total`} 
@@ -270,10 +273,10 @@ const StatisticsPage = () => {
             height={350}
             width="95%"
           />
-        </Box>
+        </Grid>
         
         {/* Graphique des commandes par statut */}
-        <Box>
+        <Grid item xs={12}>
           <PieChartCard 
             title="Commandes par statut" 
             subtitle="Répartition des commandes selon leur statut actuel" 
@@ -284,29 +287,29 @@ const StatisticsPage = () => {
             height={400}
             width="95%"
           />
-        </Box>
+        </Grid>
         
         {/* Tableaux des performances des agents et des commandes récentes */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', px: 0 }}>
-          <Box>
+        <Grid container direction="column" spacing={6} sx={{ width: '100%', px: 0 }}>
+          <Grid item xs={12}>
             <AgentPerformanceTable 
               title="Performance des agents" 
               subtitle="Évaluation des performances des agents par commandes traitées et temps moyen" 
               data={agentPerformance}
               lastUpdated="Mis à jour aujourd'hui"
             />
-          </Box>
+          </Grid>
           
-          <Box>
+          <Grid item xs={12}>
             <RecentOrdersTable 
               title="Commandes récentes" 
               subtitle="Dernières commandes traitées" 
               data={recentOrders}
               lastUpdated="Mis à jour aujourd'hui"
             />
-          </Box>
-        </Box>
-      </Box>
+          </Grid>
+        </Grid>
+      </Grid>
     </Container>
   );
 };

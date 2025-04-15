@@ -1,8 +1,9 @@
 import axios from 'axios';
-import config from '../config/api';
 
-// Utiliser l'URL d'authentification depuis la configuration centralisée
-const API_BASE = config.AUTH_URL;
+//const API_URL = 'http://localhost:8000/api/auth/';
+const API_BASE = window.location.hostname === 'localhost' 
+  ? 'http://localhost:8000/api/auth/' 
+  : 'http://192.168.1.16:8000/api/auth/';
 
 // Créer une instance axios avec la configuration de base
 const api = axios.create({

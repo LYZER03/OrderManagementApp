@@ -81,6 +81,17 @@ const userService = {
       console.error(`Erreur lors de la réinitialisation du mot de passe de l'utilisateur ${userId}`, error);
       throw error;
     }
+  },
+  
+  // Récupérer tous les agents
+  getAllAgents: async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/auth/users/?role=AGENT`);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des agents', error);
+      throw error;
+    }
   }
 };
 

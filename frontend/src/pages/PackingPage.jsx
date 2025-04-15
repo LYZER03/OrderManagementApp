@@ -1,11 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Paper, Typography, Box, Divider, Grid, Alert, Chip, useTheme, useMediaQuery } from '@mui/material';
+import { 
+  Container, 
+  Paper, 
+  Typography, 
+  Box, 
+  Divider, 
+  Grid, 
+  Alert, 
+  Chip, 
+  useTheme, 
+  useMediaQuery,
+  Button,
+  Tooltip,
+  Stack
+} from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import OrderSearchBar from '../components/common/OrderSearchBar';
 import OrdersList from '../components/packing/OrdersList';
 import orderService from '../services/orderService';
 import ValidateOrderForm from '../components/packing/ValidateOrderForm';
 import OrderDetailsForm from '../components/packing/OrderDetailsForm';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { format } from 'date-fns';
 
 const PackingPage = () => {
   const { user } = useAuth();
@@ -25,29 +41,39 @@ const PackingPage = () => {
   const [validateOrderDialogOpen, setValidateOrderDialogOpen] = useState(false);
   const [orderDetailsDialogOpen, setOrderDetailsDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Fonction pour charger les commandes à emballer
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // N'afficher que les commandes du jour par défaut
+      const data = await orderService.getOrdersToPack('today');
+      console.log('Données reçues du serveur:', data);
+      
+      setOrders(data);
+      setFilteredOrders(data);
+      setTotalCount(data.length);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Erreur lors du chargement des commandes', err);
+      setError('Impossible de charger les commandes. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Charger les commandes à emballer
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = await orderService.getOrdersToPack();
-        console.log('Données reçues du serveur:', data);
-        
-        setOrders(data);
-        setFilteredOrders(data);
-        setTotalCount(data.length);
-      } catch (err) {
-        console.error('Erreur lors du chargement des commandes', err);
-        setError('Impossible de charger les commandes. Veuillez réessayer.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
-  }, [user]);
+  }, [user, refreshTrigger]);
+  
+  // Gérer le rafraîchissement des données
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   // Filtrer les commandes lorsque la recherche change
   useEffect(() => {
@@ -129,10 +155,12 @@ const PackingPage = () => {
     setLoading(true);
     setError('');
     try {
-      const data = await orderService.getOrdersToPack();
+      // N'afficher que les commandes du jour par défaut
+      const data = await orderService.getOrdersToPack('today');
       setOrders(data);
       setFilteredOrders(data);
       setTotalCount(data.length);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Erreur lors du rechargement des commandes', err);
       setError('Impossible de recharger les commandes. Veuillez réessayer.');
@@ -161,14 +189,38 @@ const PackingPage = () => {
           boxShadow: 'none'
         }}
       >
-        <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
-          Emballage des commandes
-        </Typography>
-        {!isMobile && (
-          <Typography variant="body1" paragraph>
-            Cette page permet de gérer l'emballage des commandes qui ont été contrôlées.
-          </Typography>
-        )}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+          <Box>
+            <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
+              Emballage des commandes
+            </Typography>
+            {!isMobile && (
+              <Typography variant="body1">
+                Cette page permet de gérer l'emballage des commandes qui ont été contrôlées.
+              </Typography>
+            )}
+          </Box>
+          
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="caption" color="text.secondary">
+              Dernière mise à jour: {format(lastUpdated, 'dd/MM/yyyy HH:mm:ss')}
+            </Typography>
+            
+            <Tooltip title="Rafraîchir les données">
+              <Button 
+                variant="outlined" 
+                color="primary" 
+                onClick={handleRefresh}
+                startIcon={<RefreshIcon />}
+                size={isMobile ? "small" : "medium"}
+              >
+                {isMobile ? '' : 'Rafraîchir'}
+              </Button>
+            </Tooltip>
+          </Stack>
+        </Box>
+        
+
         
         <OrderSearchBar onSearch={handleSearch} />
         

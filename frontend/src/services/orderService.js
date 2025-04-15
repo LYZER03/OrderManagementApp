@@ -1,9 +1,10 @@
 import axios from 'axios';
 import authService from './authService';
-import config from '../config/api';
 
-// Utiliser l'URL API depuis la configuration centralisée
-const API_BASE = config.API_URL;
+//const API_URL = 'http://localhost:8000/api';
+const API_BASE = window.location.hostname === 'localhost' 
+  ? 'http://localhost:8000/api' 
+  : 'http://192.168.1.16:8000/api';
 
 // Configuration de l'intercepteur pour ajouter le token JWT à chaque requête
 axios.interceptors.request.use(
@@ -21,12 +22,13 @@ axios.interceptors.request.use(
 
 const orderService = {
   // Récupérer toutes les commandes à préparer (statut CREATED)
-  getOrdersToPrepare: async (creatorOnly = false) => {
+  getOrdersToPrepare: async (creatorOnly = false, date = 'today') => {
     try {
-      const url = creatorOnly
-        ? `${API_BASE}/orders/preparation/?creator_only=true`
-        : `${API_BASE}/orders/preparation/`;
+      let url = creatorOnly
+        ? `${API_BASE}/orders/preparation/?creator_only=true&date=${date}`
+        : `${API_BASE}/orders/preparation/?date=${date}`;
       
+      console.log(`Récupération des commandes à préparer avec date=${date}`);
       const response = await axios.get(url);
       return response.data;
     } catch (error) {
@@ -36,10 +38,10 @@ const orderService = {
   },
 
   // Récupérer toutes les commandes à contrôler (statut PREPARED)
-  getOrdersToControl: async () => {
+  getOrdersToControl: async (date = 'today') => {
     try {
-      //const response = await axios.get(`${API_URL}/orders/control/`);
-      const response = await axios.get(`${API_BASE}/orders/control/`);
+      console.log(`Récupération des commandes à contrôler avec date=${date}`);
+      const response = await axios.get(`${API_BASE}/orders/control/?date=${date}`);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des commandes à contrôler', error);
@@ -48,10 +50,10 @@ const orderService = {
   },
 
   // Récupérer toutes les commandes à emballer (statut CONTROLLED)
-  getOrdersToPack: async () => {
+  getOrdersToPack: async (date = 'today') => {
     try {
-      //const response = await axios.get(`${API_URL}/orders/packing/`);
-      const response = await axios.get(`${API_BASE}/orders/packing/`);
+      console.log(`Récupération des commandes à emballer avec date=${date}`);
+      const response = await axios.get(`${API_BASE}/orders/packing/?date=${date}`);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des commandes à emballer', error);
@@ -138,56 +140,37 @@ const orderService = {
     }
   },
 
-  // Récupérer les commandes avec pagination et filtrage
-  getAllOrders: async (params = {}) => {
+  // Récupérer toutes les commandes (pour les managers)
+  getAllOrders: async (dateParam = 'today', creatorId = null) => {
     try {
-      // Paramètres par défaut
-      const defaultParams = {
-        page: 1,
-        page_size: 20,
-        ordering: '-created_at'
-      };
+      // Construire l'URL en fonction des paramètres
+      let url = `${API_BASE}/orders/`;
+      let params = [];
       
-      // Fusionner les paramètres par défaut avec ceux fournis
-      const queryParams = { ...defaultParams, ...params };
+      // Vérifier si le paramètre est une chaîne simple (today, all) ou une plage de dates
+      if (dateParam.includes('start_date') || dateParam.includes('end_date')) {
+        // C'est une plage de dates, ajouter les paramètres tels quels
+        params.push(dateParam);
+      } else if (dateParam !== 'all') {
+        // C'est une date simple (today ou une date spécifique)
+        params.push(`date=${dateParam}`);
+      }
       
-      // Construire l'URL avec les paramètres de requête
-      const queryString = Object.keys(queryParams)
-        .map(key => `${key}=${encodeURIComponent(queryParams[key])}`)
-        .join('&');
+      // Ajouter le filtre par créateur si spécifié
+      if (creatorId) {
+        params.push(`creator_id=${creatorId}`);
+      }
       
-      const response = await axios.get(`${API_BASE}/orders/?${queryString}`);
+      // Construire l'URL finale avec les paramètres
+      if (params.length > 0) {
+        url += `?${params.join('&')}`;
+      }
+      
+      console.log(`Récupération des commandes avec URL: ${url}`);
+      const response = await axios.get(url);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des commandes', error);
-      throw error;
-    }
-  },
-
-  getStats: async () => {
-    try {
-      const response = await axios.get(`${API_BASE}/dashboard/`);
-      return response.data;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des statistiques', error);
-      throw error;
-    }
-  },
-  
-  // Supprimer en masse les commandes selon les filtres actuels
-  bulkDeleteOrders: async (filters = {}) => {
-    try {
-      // Construire l'URL avec les paramètres de filtrage
-      const queryString = Object.keys(filters)
-        .filter(key => filters[key] !== null && filters[key] !== undefined)
-        .map(key => `${key}=${encodeURIComponent(filters[key])}`)
-        .join('&');
-      
-      const url = queryString ? `${API_BASE}/orders/?${queryString}` : `${API_BASE}/orders/`;
-      const response = await axios.delete(url);
-      return response.data;
-    } catch (error) {
-      console.error('Erreur lors de la suppression en masse des commandes', error);
       throw error;
     }
   },

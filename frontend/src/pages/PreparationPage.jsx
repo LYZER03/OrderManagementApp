@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Paper, Typography, Box, Divider, Grid, Alert, Chip, useTheme, useMediaQuery } from '@mui/material';
+import { 
+  Container, 
+  Paper, 
+  Typography, 
+  Box, 
+  Divider, 
+  Grid, 
+  Alert, 
+  Chip, 
+  useTheme, 
+  useMediaQuery, 
+  Button,
+  Tooltip,
+  Stack
+} from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import OrderSearchBar from '../components/common/OrderSearchBar';
 import OrdersList from '../components/preparation/OrdersList';
@@ -7,6 +21,8 @@ import orderService from '../services/orderService';
 import AddOrderForm from '../components/preparation/AddOrderForm';
 import EditOrderForm from '../components/preparation/EditOrderForm';
 import ValidateOrderForm from '../components/preparation/ValidateOrderForm';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { format } from 'date-fns';
 
 const PreparationPage = () => {
   const { user } = useAuth();
@@ -27,35 +43,45 @@ const PreparationPage = () => {
   const [editOrderDialogOpen, setEditOrderDialogOpen] = useState(false);
   const [validateOrderDialogOpen, setValidateOrderDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Fonction pour charger les commandes à préparer
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // Pour les managers, on peut choisir de voir toutes les commandes ou seulement les siennes
+      // Pour les agents, on ne montre que leurs propres commandes
+      const creatorOnly = user && (user.role === 'AGENT' || user.role === 'MANAGER');
+      
+      // Utiliser le paramètre creatorOnly pour filtrer côté serveur
+      // et n'afficher que les commandes du jour par défaut
+      const data = await orderService.getOrdersToPrepare(creatorOnly, 'today');
+      console.log('Données reçues du serveur:', data);
+      
+      // Plus besoin de filtrer côté client, le backend s'en charge
+      setOrders(data);
+      setFilteredOrders(data);
+      setTotalCount(data.length);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Erreur lors du chargement des commandes', err);
+      setError('Impossible de charger les commandes. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Charger les commandes à préparer
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        // Pour les managers, on peut choisir de voir toutes les commandes ou seulement les siennes
-        // Pour les agents, on ne montre que leurs propres commandes
-        const creatorOnly = user && (user.role === 'AGENT' || user.role === 'MANAGER');
-        
-        // Utiliser le paramètre creatorOnly pour filtrer côté serveur
-        const data = await orderService.getOrdersToPrepare(creatorOnly);
-        console.log('Données reçues du serveur:', data);
-        
-        // Plus besoin de filtrer côté client, le backend s'en charge
-        setOrders(data);
-        setFilteredOrders(data);
-        setTotalCount(data.length);
-      } catch (err) {
-        console.error('Erreur lors du chargement des commandes', err);
-        setError('Impossible de charger les commandes. Veuillez réessayer.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
-  }, [user]);
+  }, [user, refreshTrigger]);
+  
+  // Gérer le rafraîchissement des données
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   // Filtrer les commandes lorsque la recherche change
   useEffect(() => {
@@ -125,12 +151,14 @@ const PreparationPage = () => {
       const creatorOnly = user && (user.role === 'AGENT' || user.role === 'MANAGER');
       
       // Utiliser le paramètre creatorOnly pour filtrer côté serveur
-      const data = await orderService.getOrdersToPrepare(creatorOnly);
+      // et n'afficher que les commandes du jour par défaut
+      const data = await orderService.getOrdersToPrepare(creatorOnly, 'today');
       
       // Plus besoin de filtrer côté client, le backend s'en charge
       setOrders(data);
       setFilteredOrders(data);
       setTotalCount(data.length);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Erreur lors du rechargement des commandes', err);
       setError('Impossible de recharger les commandes. Veuillez réessayer.');
@@ -189,28 +217,52 @@ const PreparationPage = () => {
           boxShadow: 'none'
         }}
       >
-        <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
-          Préparation des commandes
-        </Typography>
-        {!isMobile && (
-          <Typography variant="body1" paragraph>
-            Cette page permet de gérer les commandes en attente de préparation.
-          </Typography>
-        )}
-        
-        {user && user.role === 'AGENT' && (
-          <Box sx={{ mb: 3, display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row' }}>
-            <Chip 
-              label="Mode Agent" 
-              color="primary" 
-              size="small" 
-              sx={{ mr: 1, mb: isMobile ? 1 : 0 }} 
-            />
-            <Typography variant="body2" color="textSecondary">
-              En tant qu'agent, vous ne voyez que les commandes que vous avez créées.
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+          <Box>
+            <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
+              Préparation des commandes
             </Typography>
+            {!isMobile && (
+              <Typography variant="body1">
+                Cette page permet de gérer les commandes en attente de préparation.
+              </Typography>
+            )}
           </Box>
-        )}
+          
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="caption" color="text.secondary">
+              Dernière mise à jour: {format(lastUpdated, 'dd/MM/yyyy HH:mm:ss')}
+            </Typography>
+            
+            <Tooltip title="Rafraîchir les données">
+              <Button 
+                variant="outlined" 
+                color="primary" 
+                onClick={handleRefresh}
+                startIcon={<RefreshIcon />}
+                size={isMobile ? "small" : "medium"}
+              >
+                {isMobile ? '' : 'Rafraîchir'}
+              </Button>
+            </Tooltip>
+          </Stack>
+        </Box>
+        
+        <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          {user && user.role === 'AGENT' && (
+            <Box sx={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', mr: 2 }}>
+              <Chip 
+                label="Mode Agent" 
+                color="primary" 
+                size="small" 
+                sx={{ mr: 1, mb: isMobile ? 1 : 0 }} 
+              />
+              <Typography variant="body2" color="textSecondary">
+                En tant qu'agent, vous ne voyez que les commandes que vous avez créées.
+              </Typography>
+            </Box>
+          )}
+        </Box>
         
         <OrderSearchBar onSearch={handleSearch} onAddClick={handleOpenAddOrderDialog} />
         
