@@ -281,6 +281,24 @@ const statsService = {
       console.error('Erreur lors de la récupération des commandes récentes', error);
       throw error;
     }
+  },
+  
+  // Récupérer toutes les statistiques du tableau de bord pour les analyses avancées
+  getDashboardStats: async (queryParams = '') => {
+    try {
+      const url = queryParams 
+        ? `${API_BASE}/orders/dashboard/?${queryParams}` 
+        : `${API_BASE}/orders/dashboard/`;
+      
+      console.log('URL dashboard stats:', url);
+      const response = await axios.get(url, getAuthHeaders());
+      console.log('Réponse dashboard stats:', response.data);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques du tableau de bord', error);
+      throw error;
+    }
   }
 };
 

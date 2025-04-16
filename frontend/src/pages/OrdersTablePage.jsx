@@ -47,15 +47,41 @@ const OrdersTablePage = () => {
     return <Navigate to="/" replace />;
   }
 
-  // Fonction pour charger les commandes
-  const fetchOrders = async () => {
+  // État pour stocker les filtres de date
+  const [dateFilter, setDateFilter] = useState('today'); // 'today' par défaut
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  // Fonction pour charger les commandes avec filtrage par date
+  const fetchOrders = async (dateParam = dateFilter, start = startDate, end = endDate) => {
     setLoading(true);
     setError('');
     try {
-      // Charger toutes les commandes sans filtre de date par défaut
-      console.log('Chargement de toutes les commandes');
-      const data = await orderService.getAllOrders('all');
-      console.log('Données reçues du serveur:', data);
+      console.log(`Chargement des commandes avec paramètre de date: ${dateParam}`);
+      
+      let queryParam = dateParam;
+      
+      // Si une plage de dates est spécifiée, construire le paramètre de requête approprié
+      if (dateParam === 'range' && start && end) {
+        const formattedStartDate = format(start, 'yyyy-MM-dd');
+        const formattedEndDate = format(end, 'yyyy-MM-dd');
+        queryParam = `start_date=${formattedStartDate}&end_date=${formattedEndDate}`;
+        console.log(`Filtrage par plage de dates: ${formattedStartDate} à ${formattedEndDate}`);
+      }
+      
+      // Récupérer les commandes avec le filtre de date approprié
+      const data = await orderService.getAllOrders(queryParam);
+      console.log(`${data.length} commandes reçues du serveur`);
+      
+      // Journaliser la répartition des commandes par date (pour débogage)
+      const dateDistribution = {};
+      data.forEach(order => {
+        if (order.created_at) {
+          const date = new Date(order.created_at).toLocaleDateString();
+          dateDistribution[date] = (dateDistribution[date] || 0) + 1;
+        }
+      });
+      console.log('Répartition des commandes par date:', dateDistribution);
       
       setOrders(data);
       setLastUpdated(new Date());
@@ -67,18 +93,31 @@ const OrdersTablePage = () => {
     }
   };
   
+  // Fonction pour filtrer par date
+  const handleDateFilterChange = (filterType, startDateValue = null, endDateValue = null) => {
+    setDateFilter(filterType);
+    
+    if (startDateValue) setStartDate(startDateValue);
+    if (endDateValue) setEndDate(endDateValue);
+    
+    // Charger les commandes avec le nouveau filtre
+    fetchOrders(filterType, startDateValue, endDateValue);
+  };
+  
 
 
-  // Charger les commandes lors d'un rafraîchissement
+  // Charger les commandes au chargement initial de la page
   useEffect(() => {
-    fetchOrders();
-  }, [refreshTrigger]);
+    // Par défaut, charger les commandes d'aujourd'hui
+    fetchOrders('today');
+  }, []);
   
 
   
   // Gérer le rafraîchissement des données
   const handleRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
+    // Rafraîchir avec le même filtre de date
+    fetchOrders(dateFilter, startDate, endDate);
   };
 
   // Fonction pour supprimer des commandes
@@ -95,6 +134,47 @@ const OrdersTablePage = () => {
       console.error('Erreur lors de la suppression des commandes', err);
       throw err;
     }
+  };
+
+  // Recherche dynamique par référence côté frontend sur toutes les commandes
+  const [searchRef, setSearchRef] = useState('');
+  const [allOrders, setAllOrders] = useState(null); // toutes les commandes pour la recherche globale
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
+
+  // Charger toutes les commandes dès la première saisie (si pas déjà fait)
+  useEffect(() => {
+    if (searchRef.trim() && allOrders === null) {
+      setSearchLoading(true);
+      setSearchError('');
+      orderService.getAllOrders('all')
+        .then(data => {
+          setAllOrders(data);
+          setSearchLoading(false);
+        })
+        .catch(() => {
+          setSearchError('Impossible de charger toutes les commandes pour la recherche.');
+          setAllOrders([]);
+          setSearchLoading(false);
+        });
+    }
+    if (!searchRef.trim()) {
+      setSearchError('');
+      setSearchLoading(false);
+    }
+  }, [searchRef, allOrders]);
+
+  // Filtrage dynamique sur allOrders
+  const filteredSearchOrders =
+    searchRef.trim() && allOrders
+      ? allOrders.filter(order =>
+          order.reference &&
+          order.reference.toLowerCase().includes(searchRef.trim().toLowerCase())
+        )
+      : null;
+
+  const clearSearch = () => {
+    setSearchRef('');
   };
 
   return (
@@ -128,11 +208,92 @@ const OrdersTablePage = () => {
               </Typography>
             )}
           </Box>
-          
-          <Stack direction="row" spacing={2} alignItems="center">
+          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+            {/* Barre de recherche par référence */}
+            <TextField
+              label="Rechercher par référence"
+              size="small"
+              value={searchRef}
+              onChange={e => setSearchRef(e.target.value)}
+              sx={{ minWidth: 200 }}
+              helperText={searchError}
+              error={!!searchError}
+              disabled={searchLoading}
+              autoFocus
+            />
+            {searchRef && (
+              <Button
+                variant="outlined"
+                color="inherit"
+                size="small"
+                onClick={clearSearch}
+                disabled={searchLoading}
+              >
+                Effacer
+              </Button>
+            )}
+            {searchLoading && <Typography variant="caption" color="primary">Recherche...</Typography>}
             <Typography variant="caption" color="text.secondary">
               Dernière mise à jour: {format(lastUpdated, 'dd/MM/yyyy HH:mm:ss')}
             </Typography>
+            
+            <ButtonGroup variant="outlined" size={isMobile ? "small" : "medium"}>
+              <Tooltip title="Afficher les commandes d'aujourd'hui">
+                <Button 
+                  color={dateFilter === 'today' ? "primary" : "inherit"}
+                  onClick={() => handleDateFilterChange('today')}
+                  startIcon={<TodayIcon />}
+                >
+                  {isMobile ? '' : "Aujourd'hui"}
+                </Button>
+              </Tooltip>
+              
+              <Tooltip title="Afficher les commandes d'hier">
+                <Button 
+                  color={dateFilter === 'yesterday' ? "primary" : "inherit"}
+                  onClick={() => handleDateFilterChange('yesterday')}
+                >
+                  {isMobile ? '' : 'Hier'}
+                </Button>
+              </Tooltip>
+              
+              <Tooltip title="Afficher toutes les commandes">
+                <Button 
+                  color={dateFilter === 'all' ? "primary" : "inherit"}
+                  onClick={() => handleDateFilterChange('all')}
+                  startIcon={<CalendarMonthIcon />}
+                >
+                  {isMobile ? '' : 'Toutes'}
+                </Button>
+              </Tooltip>
+            </ButtonGroup>
+            
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <DatePicker
+                  label="Du"
+                  value={startDate}
+                  onChange={(newValue) => {
+                    if (newValue) {
+                      handleDateFilterChange('range', newValue, endDate || newValue);
+                    }
+                  }}
+                  renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
+                  format="dd/MM/yyyy"
+                />
+                <DatePicker
+                  label="Au"
+                  value={endDate}
+                  onChange={(newValue) => {
+                    if (newValue) {
+                      handleDateFilterChange('range', startDate || newValue, newValue);
+                    }
+                  }}
+                  renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
+                  format="dd/MM/yyyy"
+                />
+              </Stack>
+            </LocalizationProvider>
             
             <Tooltip title="Rafraîchir les données">
               <Button 
@@ -153,9 +314,9 @@ const OrdersTablePage = () => {
         <Divider sx={{ my: 2 }} />
         
         <OrdersDataTable 
-          orders={orders}
-          loading={loading}
-          error={error}
+          orders={filteredSearchOrders !== null ? filteredSearchOrders : orders}
+          loading={searchRef.trim() ? searchLoading : loading}
+          error={searchRef.trim() ? searchError : error}
           onDeleteOrders={handleDeleteOrders}
         />
       </Paper>

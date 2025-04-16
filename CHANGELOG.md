@@ -1,5 +1,17 @@
 # Changelog - Application de Gestion de Commandes Interne
 
+## [Version 0.10.0] - 2025-04-17
+
+### Nouvelles fonctionnalités et améliorations
+- Ajout d'une barre de recherche dynamique par référence : filtrage instantané sur toutes les commandes, non affecté par la date ou les filtres statut/créateur.
+- Correction du bug de focus sur la barre de recherche (plus besoin de cliquer à chaque caractère).
+- Ajout d'un bouton "Réinitialiser les filtres" toujours visible dans la table des commandes.
+- Amélioration de l'expérience utilisateur sur le filtrage par statut (chips toujours visibles).
+- Suppression du bouton filtre redondant à côté du bouton supprimer.
+- Correction de l'affichage des dates avec la locale française (plus de "date invalide").
+- Corrections et harmonisation mineures de l'UI/UX.
+
+
 ## [Version 0.9.0] - 2025-04-15
 
 ### Optimisations de performance

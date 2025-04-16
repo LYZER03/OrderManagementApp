@@ -1,0 +1,52 @@
+# --- BACKEND (Django) ---
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.db
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env.*
+.envrc
+.DS_Store
+.idea/
+.vscode/
+.mypy_cache/
+.coverage
+htmlcov/
+db.sqlite3
+local_settings.py
+/static/
+/media/
+
+# --- FRONTEND (React, Node) ---
+node_modules/
+build/
+dist/
+.env
+.env.*
+.npmrc
+.yarn*
+.cache/
+*.log
+*.local
+coverage/
+
+# --- OS/Editor/Global ---
+Thumbs.db
+.DS_Store
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# --- Python virtualenv ---
+venv/
+.env/
+
+# --- Misc ---
+*.orig
+*.rej

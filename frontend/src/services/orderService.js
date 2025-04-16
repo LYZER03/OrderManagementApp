@@ -151,7 +151,11 @@ const orderService = {
       if (dateParam.includes('start_date') || dateParam.includes('end_date')) {
         // C'est une plage de dates, ajouter les paramètres tels quels
         params.push(dateParam);
-      } else if (dateParam !== 'all') {
+      } else if (dateParam === 'all') {
+        // Spécifier explicitement 'all' pour s'assurer que le backend ne filtre pas par date
+        params.push(`date=all`);
+        console.log('Paramètre "all" ajouté explicitement à l\'URL');
+      } else {
         // C'est une date simple (today ou une date spécifique)
         params.push(`date=${dateParam}`);
       }
@@ -168,6 +172,18 @@ const orderService = {
       
       console.log(`Récupération des commandes avec URL: ${url}`);
       const response = await axios.get(url);
+      console.log(`Nombre de commandes reçues: ${response.data.length}`);
+      
+      // Vérifier les dates des commandes reçues (pour débogage)
+      const dates = {};
+      response.data.forEach(order => {
+        if (order.created_at) {
+          const date = new Date(order.created_at).toLocaleDateString();
+          dates[date] = (dates[date] || 0) + 1;
+        }
+      });
+      console.log('Répartition des commandes par date:', dates);
+      
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des commandes', error);

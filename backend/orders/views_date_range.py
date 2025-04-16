@@ -26,6 +26,9 @@ class OrderListCreateView(APIView):
         date_param = request.query_params.get('date', 'today')
         creator_id = request.query_params.get('creator_id')
         
+        # Journaliser les paramètres reçus pour débogage
+        print(f"Paramètres reçus: date={date_param}, start_date={start_date_param}, end_date={end_date_param}, creator_id={creator_id}")
+        
         # Traiter les paramètres de plage de dates s'ils sont fournis
         if start_date_param:
             try:
@@ -43,6 +46,13 @@ class OrderListCreateView(APIView):
                 if start_date != today:  # Si start_date a été modifié
                     end_date = start_date + timedelta(days=1)
         
+        # Traiter le paramètre 'yesterday'
+        elif date_param == 'yesterday':
+            # Définir la plage de dates pour hier
+            start_date = today - timedelta(days=1)
+            end_date = today
+            print(f"Paramètre 'yesterday' détecté: filtrage du {start_date} au {end_date}")
+            
         # Si un paramètre de date spécifique est fourni (et pas de plage de dates)
         elif date_param != 'today' and date_param != 'all':
             try:
@@ -54,7 +64,9 @@ class OrderListCreateView(APIView):
                 pass
         
         # Si le paramètre est 'all', ne pas filtrer par date
-        if date_param == 'all' and not (start_date_param or end_date_param):
+        # Suppression de la condition "and not (start_date_param or end_date_param)" qui empêchait le traitement correct du paramètre 'all'
+        if date_param == 'all':
+            print("Paramètre 'all' détecté: aucun filtrage par date ne sera appliqué")
             # Préparer la requête sans filtre de date
             if request.user.is_manager():
                 query = Order.objects.all()
@@ -62,11 +74,14 @@ class OrderListCreateView(APIView):
                 # Filtrer par créateur si spécifié
                 if creator_id:
                     query = query.filter(creator_id=creator_id)
+                    print(f"Filtrage par créateur: {creator_id}")
                     
                 orders = query.order_by('-created_at')
+                print(f"Nombre total de commandes récupérées: {orders.count()}")
             else:
                 # Agents can see orders they created
                 orders = Order.objects.filter(creator=request.user).order_by('-created_at')
+                print(f"Nombre de commandes de l'agent: {orders.count()}")
         else:
             # Convertir les dates en datetime avec timezone
             start_datetime = timezone.make_aware(timezone.datetime.combine(start_date, timezone.datetime.min.time()))

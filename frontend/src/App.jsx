@@ -19,6 +19,7 @@ import PackingPage from './pages/PackingPage';
 import StatisticsPage from './pages/StatisticsPage';
 import UsersPage from './pages/UsersPage';
 import OrdersTablePage from './pages/OrdersTablePage';
+import AdvancedAnalyticsPage from './pages/AdvancedAnalyticsPage';
 
 function App() {
   // Tests d'authentification désactivés pour éviter les connexions automatiques
@@ -53,6 +54,7 @@ function App() {
             <Route element={<ProtectedRoute requireManager={true} />}>
               <Route element={<AppLayout />}>
                 <Route path="/statistics" element={<StatisticsPage />} />
+                <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/orders-table" element={<OrdersTablePage />} />
                 <Route path="/profile" element={<div>Page de profil (à implémenter)</div>} />

@@ -30,14 +30,11 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { format, isAfter, isBefore, isEqual, parseISO } from 'date-fns';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
-import FilterListIcon from '@mui/icons-material/FilterList';
+
 import OrderDetailsDialog from './OrderDetailsDialog';
 import userService from '../../services/userService';
 
@@ -58,8 +55,7 @@ const OrdersDataTable = ({
   const [deleteError, setDeleteError] = useState('');
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedCreator, setSelectedCreator] = useState('');
   const [agents, setAgents] = useState([]);
@@ -101,32 +97,6 @@ const OrdersDataTable = ({
         
         let result = [...orders];
         
-        // Appliquer le filtre de date si défini
-        if (startDate || endDate) {
-          result = result.filter(order => {
-            try {
-              if (!order.created_at) return false;
-              
-              const orderDate = parseISO(order.created_at);
-              let matchesStart = true;
-              let matchesEnd = true;
-              
-              if (startDate) {
-                matchesStart = isAfter(orderDate, startDate) || isEqual(orderDate, startDate);
-              }
-              
-              if (endDate) {
-                matchesEnd = isBefore(orderDate, endDate) || isEqual(orderDate, endDate);
-              }
-              
-              return matchesStart && matchesEnd;
-            } catch (err) {
-              console.error('Erreur lors du filtrage par date:', err);
-              return false;
-            }
-          });
-        }
-        
         // Appliquer le filtre de statut si défini
         if (selectedStatus) {
           result = result.filter(order => order.status === selectedStatus);
@@ -148,7 +118,7 @@ const OrdersDataTable = ({
     }, 300);
     
     return () => clearTimeout(timeoutId);
-  }, [orders, startDate, endDate, selectedStatus, selectedCreator]);
+  }, [orders, selectedStatus, selectedCreator]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -238,8 +208,6 @@ const OrdersDataTable = ({
   };
 
   const handleClearFilters = () => {
-    setStartDate(null);
-    setEndDate(null);
     setSelectedStatus(null);
     setSelectedCreator('');
   };
@@ -320,14 +288,24 @@ const OrdersDataTable = ({
             Table des commandes
           </Typography>
           <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              startIcon={<FilterListIcon />}
-              onClick={handleToggleFilter}
-              size="small"
-            >
-              Filtres
-            </Button>
+  {/* Filtres de statut toujours visibles */}
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
+    {statusOptions.map((status) => (
+      <Chip
+        key={status.value}
+        label={status.label}
+        color={selectedStatus === status.value ? status.color : 'default'}
+        onClick={() => handleStatusFilter(status.value)}
+        clickable
+        variant={selectedStatus === status.value ? 'filled' : 'outlined'}
+        sx={{ fontWeight: 600 }}
+      />
+    ))}
+    <Button size="small" variant="outlined" color="inherit" onClick={handleClearFilters} sx={{ ml: 2 }}>
+      Réinitialiser les filtres
+    </Button>
+  </Box>
+            
             <Button
               variant="contained"
               color="error"

@@ -101,6 +101,12 @@ const AppLayout = () => {
       roles: ['MANAGER']
     },
     {
+      text: 'Analyses Avancées',
+      icon: <BarChartIcon />,
+      path: '/advanced-analytics',
+      roles: ['MANAGER']
+    },
+    {
       text: 'Gestion des utilisateurs',
       icon: <PeopleIcon />,
       path: '/users',
