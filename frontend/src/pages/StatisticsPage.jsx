@@ -19,6 +19,7 @@ import { Navigate } from 'react-router-dom';
 // Composants de statistiques
 import StatCard from '../components/statistics/StatCard';
 import BarChartCard from '../components/statistics/BarChartCard';
+import ComboChartCard from '../components/statistics/ComboChartCard';
 import LineChartCard from '../components/statistics/LineChartCard';
 import PieChartCard from '../components/statistics/PieChartCard';
 import AgentPerformanceTable from '../components/statistics/AgentPerformanceTable';
@@ -33,6 +34,8 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import PeopleIcon from '@mui/icons-material/People';
+import InventoryIcon from '@mui/icons-material/Inventory';
 
 const StatisticsPage = () => {
   const { user } = useAuth();
@@ -54,6 +57,10 @@ const StatisticsPage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
+  const [refreshCounter, setRefreshCounter] = useState(0); // Compteur pour forcer le rafraîchissement des composants
+  
+  // État pour le filtre de période
+  const [periodFilter, setPeriodFilter] = useState('today'); // 'today', 'week', 'month'
 
   // Rediriger si l'utilisateur n'est pas un manager
   if (!user || user.role !== 'MANAGER') {
@@ -72,8 +79,8 @@ const StatisticsPage = () => {
     try {
       console.log('Chargement des statistiques...');
       
-      // Utiliser 'today' comme paramètre de date par défaut
-      const dateParam = 'today';
+      // Utiliser la période sélectionnée comme paramètre de date
+      const dateParam = periodFilter;
       
       // Charger d'abord les statistiques générales pour vérifier la connexion
       const generalStatsData = await statsService.getGeneralStats(dateParam);
@@ -131,8 +138,31 @@ const StatisticsPage = () => {
   
   // Fonction pour rafraîchir les données
   const handleRefresh = () => {
+    setRefreshCounter(prev => prev + 1); // Incrémenter le compteur pour forcer les composants à se rafraîchir
     fetchStats(true);
   };
+  
+  // Fonction pour changer la période
+  const handlePeriodChange = (period) => {
+    setPeriodFilter(period);
+    setRefreshCounter(prev => prev + 1); // Incrémenter le compteur pour forcer les composants à se rafraîchir
+    fetchStats(true);
+  };
+  
+  // Charger les données au premier rendu et lorsque la période change
+  useEffect(() => {
+    console.log('Chargement initial des statistiques...');
+    fetchStats();
+    
+    // Mettre en place un intervalle de rafraîchissement automatique toutes les 60 secondes
+    const autoRefreshInterval = setInterval(() => {
+      console.log('Rafraîchissement automatique des statistiques...');
+      fetchStats(true);
+    }, 60000);
+    
+    // Nettoyer l'intervalle lorsque le composant est démonté
+    return () => clearInterval(autoRefreshInterval);
+  }, []);
   
   // Charger les données au montage du composant
   useEffect(() => {
@@ -171,145 +201,311 @@ const StatisticsPage = () => {
         width: '100%'
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-        <Box>
-          <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
-            Tableau de bord statistique
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Vue d'ensemble des performances et des indicateurs clés du système de gestion des commandes.
-          </Typography>
-        </Box>
-        <Tooltip title="Rafraîchir les données">
-          <IconButton 
-            onClick={handleRefresh} 
-            disabled={refreshing}
-            color="primary"
-            sx={{ 
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          mb: { xs: 3, sm: 4 },
+          borderRadius: 2,
+          background: 'linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%)',
+          boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)'
+        }}
+      >
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          mb: { xs: 2, sm: 1 }
+        }}>
+          <Box sx={{ mb: { xs: 2, sm: 0 } }}>
+            <Typography 
+              variant={isMobile ? "h5" : "h4"} 
+              gutterBottom 
+              sx={{ 
+                fontWeight: 600,
+                mb: 0.5,
+                color: theme.palette.text.primary,
+                fontSize: { xs: '1.5rem', sm: '2rem' }
+              }}
+            >
+              Performance des Employés
+            </Typography>
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{ 
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                maxWidth: { sm: '80%' }
+              }}
+            >
+              Analyse des performances et productivité des agents
+            </Typography>
+          </Box>
+
+          {/* Filtres et rafraîchissement alignés au centre sur mobile, à droite sur desktop */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'flex-start', sm: 'center' }, 
+            alignSelf: { xs: 'stretch', sm: 'auto' },
+            gap: { xs: 2, sm: 1 }
+          }}>
+            {/* Filtres de période */}
+            <Box sx={{ 
+              display: 'flex', 
+              borderRadius: 2, 
               bgcolor: 'background.paper', 
-              boxShadow: 1,
-              '&:hover': { bgcolor: 'background.paper', opacity: 0.9 }
+              boxShadow: '0px 1px 6px rgba(0, 0, 0, 0.08)',
+              overflow: 'hidden', 
+              width: { xs: '100%', sm: 'auto' }
+            }}>
+              <Button
+                size={isMobile ? "small" : "medium"}
+                variant={periodFilter === 'today' ? 'contained' : 'text'}
+                color={periodFilter === 'today' ? 'primary' : 'inherit'}
+                onClick={() => handlePeriodChange('today')}
+                sx={{ 
+                  flexGrow: { xs: 1, sm: 0 },
+                  px: { xs: 1, sm: 2 }, 
+                  py: { xs: 0.75, sm: 1 },
+                  borderRadius: 0
+                }}
+              >
+                Aujourd'hui
+              </Button>
+              <Button
+                size={isMobile ? "small" : "medium"}
+                variant={periodFilter === 'week' ? 'contained' : 'text'}
+                color={periodFilter === 'week' ? 'primary' : 'inherit'}
+                onClick={() => handlePeriodChange('week')}
+                sx={{ 
+                  flexGrow: { xs: 1, sm: 0 },
+                  px: { xs: 1, sm: 2 }, 
+                  py: { xs: 0.75, sm: 1 },
+                  borderRadius: 0,
+                  borderLeft: '1px solid rgba(0,0,0,0.05)',
+                  borderRight: '1px solid rgba(0,0,0,0.05)'
+                }}
+              >
+                7 jours
+              </Button>
+              <Button
+                size={isMobile ? "small" : "medium"}
+                variant={periodFilter === 'month' ? 'contained' : 'text'}
+                color={periodFilter === 'month' ? 'primary' : 'inherit'}
+                onClick={() => handlePeriodChange('month')}
+                sx={{ 
+                  flexGrow: { xs: 1, sm: 0 },
+                  px: { xs: 1, sm: 2 }, 
+                  py: { xs: 0.75, sm: 1 },
+                  borderRadius: 0
+                }}
+              >
+                1 mois
+              </Button>
+            </Box>
+            
+            {/* Bouton de rafraîchissement */}
+            <Tooltip title="Rafraîchir les données">
+              <IconButton 
+                onClick={handleRefresh}
+                disabled={loading || refreshing}
+                color="primary"
+                size={isMobile ? "small" : "medium"}
+                sx={{ 
+                  boxShadow: '0px 1px 6px rgba(0, 0, 0, 0.08)', 
+                  bgcolor: 'background.paper',
+                  alignSelf: { xs: 'flex-end', sm: 'center' }
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+        
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          mt: 1 
+        }}>
+          <Typography 
+            variant="caption" 
+            color="text.secondary"
+            sx={{ 
+              fontStyle: 'italic',
+              fontSize: '0.75rem'
             }}
           >
-            {refreshing ? <CircularProgress size={24} /> : <RefreshIcon />}
-          </IconButton>
-        </Tooltip>
+            Dernière mise à jour : {lastRefreshed.toLocaleTimeString()}
+          </Typography>
+        </Box>
+      </Paper>
+      
+      {/* KPI statistiques */}
+      <Box sx={{ 
+        backgroundColor: '#f8f9fa', 
+        borderRadius: 3,
+        py: { xs: 3, sm: 4 }, 
+        px: { xs: 2, sm: 3 },
+        mb: { xs: 4, sm: 6 }, 
+        mt: { xs: 2, sm: 3 },
+        overflow: 'hidden'
+      }}>
+        <Box 
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            width: '100%',
+            gap: { xs: '16px', sm: '24px' },
+            flexWrap: { xs: 'nowrap', sm: 'wrap' }
+          }}
+        >
+          {/* Nouvelles commandes */}
+          <Box sx={{ 
+            width: { 
+              xs: '100%', 
+              sm: 'calc(50% - 12px)', 
+              md: 'calc(25% - 18px)' 
+            },
+            minWidth: 0 
+          }}>
+            <StatCard 
+              icon={<ShoppingCartIcon />} 
+              title="Nouvelles commandes" 
+              value={ordersByStatus.find(item => item.name === 'Créées')?.value || 0}
+              changePercentage={null}
+              color="primary"
+            />
+          </Box>
+
+          {/* En préparation */}
+          <Box sx={{ 
+            width: { 
+              xs: '100%', 
+              sm: 'calc(50% - 12px)', 
+              md: 'calc(25% - 18px)' 
+            },
+            minWidth: 0 
+          }}>
+            <StatCard 
+              icon={<InventoryIcon />} 
+              title="Préparées" 
+              value={ordersByStatus.find(item => item.name === 'Préparées')?.value || 0}
+              changePercentage={null}
+              color="warning"
+            />
+          </Box>
+          
+          {/* Contrôlées */}
+          <Box sx={{ 
+            width: { 
+              xs: '100%', 
+              sm: 'calc(50% - 12px)', 
+              md: 'calc(25% - 18px)' 
+            },
+            minWidth: 0 
+          }}>
+            <StatCard 
+              icon={<PeopleIcon />} 
+              title="Contrôlées" 
+              value={ordersByStatus.find(item => item.name === 'Contrôlées')?.value || 0}
+              changePercentage={null}
+              color="secondary"
+            />
+          </Box>
+
+          {/* Emballées */}
+          <Box sx={{ 
+            width: { 
+              xs: '100%', 
+              sm: 'calc(50% - 12px)', 
+              md: 'calc(25% - 18px)' 
+            },
+            minWidth: 0 
+          }}>
+            <StatCard 
+              icon={<CheckCircleIcon />} 
+              title="Emballées" 
+              value={ordersByStatus.find(item => item.name === 'Emballées')?.value || 0}
+              changePercentage={null}
+              color="success"
+            />
+          </Box>
+
+
+        </Box>
       </Box>
       
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Typography variant="caption" color="text.secondary">
-          Dernière mise à jour : {lastRefreshed.toLocaleTimeString()}
-        </Typography>
+      {/* Performance des agents */}
+      <Box sx={{ 
+        mt: 4, 
+        mb: 4,
+        width: '100%',
+      }}>
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: { xs: 2, sm: 3 }, 
+            height: '100%',
+            borderRadius: 2,
+            boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)'
+          }}
+        >
+          <Typography 
+            variant={ isMobile ? "h6" : "h5" } 
+            component="div" 
+            fontWeight="medium" 
+            gutterBottom
+          >
+            Performance par Agent
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Suivi détaillé des commandes et lignes traitées par chaque agent
+          </Typography>
+          <AgentPerformanceTable 
+            data={agentPerformance}
+            noTitle={true}
+            lastUpdated={`Dernière mise à jour: ${lastRefreshed.toLocaleTimeString()}`}
+            key={`agent-performance-${refreshCounter}`} // Forcer le remontage du composant à chaque rafraîchissement
+          />
+        </Paper>
       </Box>
-      
-      {/* Cartes de statistiques générales */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            icon={<ShoppingCartIcon />} 
-            title="Commandes totales" 
-            value={generalStats?.totalOrders || 0} 
-            changePercentage={generalStats?.growthPercentage?.totalOrders || 0} 
-            changeText="depuis la semaine dernière" 
-            color="primary"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            icon={<PendingActionsIcon />} 
-            title="En cours" 
-            value={generalStats?.ordersInProgress || 0} 
-            changePercentage={generalStats?.growthPercentage?.ordersInProgress || 0} 
-            changeText="depuis le mois dernier" 
-            color="info"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            icon={<CheckCircleIcon />} 
-            title="Complétées" 
-            value={generalStats?.completedOrders || 0} 
-            changePercentage={generalStats?.growthPercentage?.completedOrders || 0} 
-            changeText="depuis hier" 
-            color="success"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard 
-            icon={<TrendingUpIcon />} 
-            title="Croissance" 
-            value={`+${generalStats?.growthRate || 0}`} 
-            lastUpdated="Juste mis à jour" 
-            color="warning"
-          />
-        </Grid>
-      </Grid>
-      
-      {/* Graphiques et tableaux */}
-      <Grid container spacing={4} sx={{ px: 0 }}>
-        {/* Graphique des ventes quotidiennes */}
-        <Grid item xs={12}>
-          <LineChartCard 
-            title="Commandes mensuelles" 
-            subtitle={`${dailySales.reduce((sum, item) => sum + item.sales, 0)} commandes créées au total`} 
+        
+      {/* Graphiques secondaires réduits - sur une seule ligne */}
+      <Box sx={{ 
+        display: 'flex',
+        width: '100%',
+        gap: '24px',
+        mb: 4,
+        flexWrap: { xs: 'wrap', md: 'nowrap' }
+      }}>
+        <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+          <ComboChartCard 
+            title="Évolution des commandes" 
+            subtitle="Nombre de commandes par jour" 
             data={dailySales} 
-            lines={[{ dataKey: 'sales', color: theme.palette.success.main, name: 'Commandes' }]}
+            barDataKey="barres"
+            lineDataKey="courbe"
             xAxisDataKey="name"
-            lastUpdated={`Mis à jour le ${new Date().toLocaleDateString('fr-FR')}`}
-            height={350}
-            width="95%"
+            barColor="#51158C"
+            lineColor={theme.palette.error.main}
+            height={isMobile ? 200 : 250}
           />
-        </Grid>
+        </Box>
         
-        {/* Graphique des tâches complétées */}
-        <Grid item xs={12}>
-          <LineChartCard 
-            title="Commandes emballées" 
-            subtitle={`${completedTasks.reduce((sum, item) => sum + item.tasks, 0)} commandes emballées au total`} 
-            data={completedTasks} 
-            lines={[{ dataKey: 'tasks', color: theme.palette.grey[800], name: 'Emballées' }]}
-            xAxisDataKey="name"
-            lastUpdated={`Mis à jour le ${new Date().toLocaleDateString('fr-FR')}`}
-            height={350}
-            width="95%"
-          />
-        </Grid>
-        
-        {/* Graphique des commandes par statut */}
-        <Grid item xs={12}>
+        <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
           <PieChartCard 
-            title="Commandes par statut" 
-            subtitle="Répartition des commandes selon leur statut actuel" 
+            title="Distribution des statuts" 
+            subtitle="Pourcentage par état de commande" 
             data={ordersByStatus} 
             dataKey="value"
             nameKey="name"
-            lastUpdated="Mis à jour aujourd'hui"
-            height={400}
-            width="95%"
+            height={isMobile ? 200 : 250}
           />
-        </Grid>
-        
-        {/* Tableaux des performances des agents et des commandes récentes */}
-        <Grid container direction="column" spacing={6} sx={{ width: '100%', px: 0 }}>
-          <Grid item xs={12}>
-            <AgentPerformanceTable 
-              title="Performance des agents" 
-              subtitle="Évaluation des performances des agents par commandes traitées et temps moyen" 
-              data={agentPerformance}
-              lastUpdated="Mis à jour aujourd'hui"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <RecentOrdersTable 
-              title="Commandes récentes" 
-              subtitle="Dernières commandes traitées" 
-              data={recentOrders}
-              lastUpdated="Mis à jour aujourd'hui"
-            />
-          </Grid>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Container>
   );
 };

@@ -38,7 +38,7 @@ const ControlPage = () => {
   const [searchedOrder, setSearchedOrder] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const [validateOrderDialogOpen, setValidateOrderDialogOpen] = useState(false);
+  
   const [orderDetailsDialogOpen, setOrderDetailsDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -126,16 +126,10 @@ const ControlPage = () => {
   );
 
   // Gérer l'ouverture du formulaire de validation
-  const handleOpenValidateOrderDialog = (order) => {
-    setSelectedOrder(order);
-    setValidateOrderDialogOpen(true);
-  };
+  
 
   // Gérer la fermeture du formulaire de validation
-  const handleCloseValidateOrderDialog = () => {
-    setValidateOrderDialogOpen(false);
-    setSelectedOrder(null);
-  };
+  
 
   // Gérer l'ouverture du formulaire de détails
   const handleOpenOrderDetailsDialog = (order) => {
@@ -247,16 +241,18 @@ const ControlPage = () => {
           totalCount={totalCount}
           onChangePage={handleChangePage}
           onChangeRowsPerPage={handleChangeRowsPerPage}
-          onValidate={handleOpenValidateOrderDialog}
+          onValidate={async (order) => {
+  try {
+    await orderService.controlOrder(order.id);
+    await handleOrderValidated();
+  } catch (err) {
+    alert('Erreur lors de la validation : ' + (err?.response?.data?.error || err.message));
+  }
+}}
           onViewDetails={handleOpenOrderDetailsDialog}
         />
 
-        <ValidateOrderForm 
-          open={validateOrderDialogOpen}
-          onClose={handleCloseValidateOrderDialog}
-          order={selectedOrder}
-          onOrderValidated={handleOrderValidated}
-        />
+        
         <OrderDetailsForm 
           open={orderDetailsDialogOpen}
           onClose={handleCloseOrderDetailsDialog}

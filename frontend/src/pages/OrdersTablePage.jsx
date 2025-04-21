@@ -136,15 +136,16 @@ const OrdersTablePage = () => {
     }
   };
 
-  // Recherche dynamique par référence côté frontend sur toutes les commandes
+  // Recherche dynamique par référence et par N° Chariot côté frontend sur toutes les commandes
   const [searchRef, setSearchRef] = useState('');
+  const [searchCartNumber, setSearchCartNumber] = useState('');
   const [allOrders, setAllOrders] = useState(null); // toutes les commandes pour la recherche globale
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
 
   // Charger toutes les commandes dès la première saisie (si pas déjà fait)
   useEffect(() => {
-    if (searchRef.trim() && allOrders === null) {
+    if ((searchRef.trim() || searchCartNumber.trim()) && allOrders === null) {
       setSearchLoading(true);
       setSearchError('');
       orderService.getAllOrders('all')
@@ -158,23 +159,32 @@ const OrdersTablePage = () => {
           setSearchLoading(false);
         });
     }
-    if (!searchRef.trim()) {
+    if (!searchRef.trim() && !searchCartNumber.trim()) {
       setSearchError('');
       setSearchLoading(false);
     }
-  }, [searchRef, allOrders]);
+  }, [searchRef, searchCartNumber, allOrders]);
 
   // Filtrage dynamique sur allOrders
   const filteredSearchOrders =
-    searchRef.trim() && allOrders
-      ? allOrders.filter(order =>
-          order.reference &&
-          order.reference.toLowerCase().includes(searchRef.trim().toLowerCase())
-        )
+    (searchRef.trim() || searchCartNumber.trim()) && allOrders
+      ? allOrders.filter(order => {
+          const matchRef = searchRef.trim()
+            ? order.reference && order.reference.toLowerCase().includes(searchRef.trim().toLowerCase())
+            : true;
+          const matchCart = searchCartNumber.trim()
+            ? order.cart_number && order.cart_number.toLowerCase().includes(searchCartNumber.trim().toLowerCase())
+            : true;
+          return matchRef && matchCart;
+        })
       : null;
 
   const clearSearch = () => {
     setSearchRef('');
+  };
+
+  const clearCartNumberSearch = () => {
+    setSearchCartNumber('');
   };
 
   return (
@@ -197,79 +207,152 @@ const OrdersTablePage = () => {
           boxShadow: 'none'
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          <Box>
-            <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
-              Table des commandes
+        {/* Titre et infos */}
+        <Box>
+          <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
+            Table des commandes
+          </Typography>
+          {!isMobile && (
+            <Typography variant="body1">
+              Cette page permet de visualiser, filtrer et gérer les commandes du système.
             </Typography>
-            {!isMobile && (
-              <Typography variant="body1">
-                Cette page permet de visualiser, filtrer et gérer les commandes du système.
-              </Typography>
-            )}
-          </Box>
-          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-            {/* Barre de recherche par référence */}
-            <TextField
-              label="Rechercher par référence"
-              size="small"
-              value={searchRef}
-              onChange={e => setSearchRef(e.target.value)}
-              sx={{ minWidth: 200 }}
-              helperText={searchError}
-              error={!!searchError}
-              disabled={searchLoading}
-              autoFocus
-            />
-            {searchRef && (
-              <Button
-                variant="outlined"
-                color="inherit"
+          )}
+        </Box>
+        {/* Section des filtres de recherche - Restructurée pour responsive */}
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: { xs: 2, sm: 3 },
+            mb: 3,
+            borderRadius: 2,
+            border: '1px solid rgba(0, 0, 0, 0.06)',
+            background: 'linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%)',
+          }}
+        >
+          {/* Grille responsive pour les barres de recherche */}
+          <Box 
+            sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+              gap: 2,
+              mb: 3
+            }}
+          >
+            {/* Barre de recherche par N° Chariot */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TextField
+                label="Rechercher par N° Chariot"
                 size="small"
-                onClick={clearSearch}
+                value={searchCartNumber}
+                onChange={e => setSearchCartNumber(e.target.value)}
+                sx={{ flex: 1 }}
                 disabled={searchLoading}
-              >
-                Effacer
-              </Button>
-            )}
-            {searchLoading && <Typography variant="caption" color="primary">Recherche...</Typography>}
-            <Typography variant="caption" color="text.secondary">
-              Dernière mise à jour: {format(lastUpdated, 'dd/MM/yyyy HH:mm:ss')}
-            </Typography>
+                placeholder="Entrez un numéro"
+                fullWidth
+              />
+              {searchCartNumber && (
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  size="small"
+                  onClick={clearCartNumberSearch}
+                  disabled={searchLoading}
+                >
+                  Effacer
+                </Button>
+              )}
+            </Box>
             
-            <ButtonGroup variant="outlined" size={isMobile ? "small" : "medium"}>
+            {/* Barre de recherche par référence */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TextField
+                label="Rechercher par référence"
+                size="small"
+                value={searchRef}
+                onChange={e => setSearchRef(e.target.value)}
+                fullWidth
+                helperText={searchError}
+                error={!!searchError}
+                disabled={searchLoading}
+                placeholder="Entrez une référence"
+              />
+              {searchRef && (
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  size="small"
+                  onClick={clearSearch}
+                  disabled={searchLoading}
+                >
+                  Effacer
+                </Button>
+              )}
+            </Box>
+          </Box>
+          
+          <Divider sx={{ my: 2 }} />
+
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Filtres de date
+            </Typography>
+          </Box>
+          
+          {/* Section des filtres de date */}
+          <Box 
+            sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { xs: '1fr', md: '2fr 3fr 1fr' },
+              gap: { xs: 2, md: 2 },
+              alignItems: 'center'
+            }}
+          >
+            {/* Filtres rapides */}
+            <ButtonGroup 
+              variant="outlined" 
+              size={isMobile ? "small" : "medium"}
+              sx={{ width: '100%', justifyContent: { xs: 'center', md: 'flex-start' } }}
+            >
               <Tooltip title="Afficher les commandes d'aujourd'hui">
                 <Button 
                   color={dateFilter === 'today' ? "primary" : "inherit"}
                   onClick={() => handleDateFilterChange('today')}
-                  startIcon={<TodayIcon />}
+                  startIcon={!isMobile && <TodayIcon />}
+                  sx={{ flex: { xs: 1, md: 'initial' } }}
                 >
-                  {isMobile ? '' : "Aujourd'hui"}
+                  {isMobile ? 'Auj.' : "Aujourd'hui"}
                 </Button>
               </Tooltip>
-              
               <Tooltip title="Afficher les commandes d'hier">
                 <Button 
                   color={dateFilter === 'yesterday' ? "primary" : "inherit"}
                   onClick={() => handleDateFilterChange('yesterday')}
+                  sx={{ flex: { xs: 1, md: 'initial' } }}
                 >
-                  {isMobile ? '' : 'Hier'}
+                  {isMobile ? 'Hier' : 'Hier'}
                 </Button>
               </Tooltip>
-              
               <Tooltip title="Afficher toutes les commandes">
                 <Button 
                   color={dateFilter === 'all' ? "primary" : "inherit"}
                   onClick={() => handleDateFilterChange('all')}
-                  startIcon={<CalendarMonthIcon />}
+                  startIcon={!isMobile && <CalendarMonthIcon />}
+                  sx={{ flex: { xs: 1, md: 'initial' } }}
                 >
-                  {isMobile ? '' : 'Toutes'}
+                  {isMobile ? 'Tout' : 'Toutes'}
                 </Button>
               </Tooltip>
             </ButtonGroup>
             
+            {/* Sélecteurs de date */}
             <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Box 
+                sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr' },
+                  gap: 1
+                }}
+              >
                 <DatePicker
                   label="Du"
                   value={startDate}
@@ -278,7 +361,7 @@ const OrdersTablePage = () => {
                       handleDateFilterChange('range', newValue, endDate || newValue);
                     }
                   }}
-                  renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
+                  renderInput={(params) => <TextField {...params} size="small" fullWidth />}
                   format="dd/MM/yyyy"
                 />
                 <DatePicker
@@ -289,30 +372,40 @@ const OrdersTablePage = () => {
                       handleDateFilterChange('range', startDate || newValue, newValue);
                     }
                   }}
-                  renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
+                  renderInput={(params) => <TextField {...params} size="small" fullWidth />}
                   format="dd/MM/yyyy"
                 />
-              </Stack>
+              </Box>
             </LocalizationProvider>
             
-            <Tooltip title="Rafraîchir les données">
-              <Button 
-                variant="outlined" 
-                color="primary" 
-                onClick={handleRefresh}
-                startIcon={<RefreshIcon />}
-                size={isMobile ? "small" : "medium"}
-              >
-                {isMobile ? '' : 'Rafraîchir'}
-              </Button>
-            </Tooltip>
-          </Stack>
-        </Box>
-        
-
-        
+            {/* Bouton de rafraîchissement */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              justifyContent: { xs: 'center', md: 'flex-end' },
+              alignItems: { xs: 'center', md: 'flex-end' }
+            }}>
+              <Tooltip title="Rafraîchir les données">
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={handleRefresh}
+                  startIcon={<RefreshIcon />}
+                  size={isMobile ? "small" : "medium"}
+                  fullWidth={isMobile}
+                  sx={{ mb: 1 }}
+                >
+                  {isMobile ? 'Actualiser' : 'Rafraîchir'}
+                </Button>
+              </Tooltip>
+              
+              <Typography variant="caption" color="text.secondary" sx={{ textAlign: { xs: 'center', md: 'right' } }}>
+                Dernière mise à jour: {format(lastUpdated, 'dd/MM/yyyy HH:mm:ss')}
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
         <Divider sx={{ my: 2 }} />
-        
         <OrdersDataTable 
           orders={filteredSearchOrders !== null ? filteredSearchOrders : orders}
           loading={searchRef.trim() ? searchLoading : loading}

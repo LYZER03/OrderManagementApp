@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-//const API_URL = 'http://localhost:8000/api';
+//const API_URL = 'http://localhost:8000/api';http://192.168.3.207:8000
+
 const API_BASE = window.location.hostname === 'localhost' 
   ? 'http://localhost:8000/api' 
   : 'http://192.168.1.16:8000/api';

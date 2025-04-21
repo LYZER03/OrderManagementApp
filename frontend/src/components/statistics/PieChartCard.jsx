@@ -76,8 +76,8 @@ const PieChartCard = ({
       
       <Divider sx={{ mb: 2 }} />
       
-      <Box sx={{ p: isMobile ? 1 : 3, height: isMobile ? 250 : height || 300, width: width }}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={isMobile ? 300 : 500}>
+      <Box sx={{ height: height || 300, width: width, display: 'flex', justifyContent: 'center', alignItems: 'center', overflowX: 'auto', overflowY: 'hidden' }}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={isMobile ? 300 : 'auto'}>
           <PieChart>
             <Pie
               data={data}

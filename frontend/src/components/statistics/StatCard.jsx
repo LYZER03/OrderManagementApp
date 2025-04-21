@@ -1,98 +1,88 @@
 import React from 'react';
-import { Box, Typography, Paper, useTheme } from '@mui/material';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { Box, Typography, Paper, useTheme} from '@mui/material';
 
 const StatCard = ({ 
   icon, 
   title, 
   value, 
-  changePercentage, 
-  changeText, 
   color = 'primary',
-  lastUpdated
 }) => {
   const theme = useTheme();
   
-  // Déterminer la couleur de l'icône de changement
-  const getChangeColor = () => {
-    if (changePercentage > 0) return theme.palette.success.main;
-    if (changePercentage < 0) return theme.palette.error.main;
-    return theme.palette.text.secondary;
-  };
-
-  // Déterminer l'icône de changement
-  const getChangeIcon = () => {
-    if (changePercentage > 0) return <ArrowUpwardIcon fontSize="small" />;
-    if (changePercentage < 0) return <ArrowDownwardIcon fontSize="small" />;
-    return null;
+  // Détermine la couleur de la barre de progression en fonction de la couleur fournie
+  const getProgressColor = () => {
+    switch(color) {
+      case 'primary': return theme.palette.primary.main;
+      case 'secondary': return theme.palette.secondary.main;
+      case 'success': return theme.palette.success.main;
+      case 'warning': return theme.palette.warning.main;
+      case 'info': return theme.palette.info.main;
+      default: return theme.palette.primary.main;
+    }
   };
 
   return (
     <Paper 
       elevation={0}
       sx={{ 
-        p: 2, 
+        px: 3,
+        py: 3,
         display: 'flex', 
         flexDirection: 'column',
         height: '100%',
+        width: '100%',
         borderRadius: 2,
+        boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.08)',
+        position: 'relative',
         overflow: 'hidden',
-        position: 'relative'
+        backgroundColor: '#FFFFFF'
       }}
     >
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          mb: 1,
-          color: `${color}.main`
-        }}
-      >
-        <Box 
+      {/* En-tête: titre et icône */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+        {/* Titre */}
+        <Typography 
+          variant="subtitle1" 
+          component="div" 
           sx={{ 
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: `${color}.lighter`,
-            color: `${color}.main`,
-            p: 1,
-            borderRadius: 1,
-            mr: 1
+            fontWeight: 500, 
+            color: 'text.primary'
           }}
         >
-          {icon}
-        </Box>
-        <Typography variant="subtitle2" color="text.secondary">
           {title}
         </Typography>
+        
+        {/* Icône */}
+        {icon && (
+          <Box
+            sx={{
+              color: getProgressColor(),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {icon}
+          </Box>
+        )}
       </Box>
       
-      <Typography variant="h4" component="div" fontWeight="bold" sx={{ mb: 1 }}>
+      {/* Valeur principale */}
+      <Typography 
+        variant="h2" 
+        component="div" 
+        sx={{ 
+          fontWeight: 700, 
+          my: 2,
+          color: 'text.primary',
+          textAlign: 'center',
+          fontSize: '2.5rem'
+        }}
+      >
         {value}
       </Typography>
       
-      <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto' }}>
-        {changePercentage !== undefined && (
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              color: getChangeColor(),
-              mr: 1
-            }}
-          >
-            {getChangeIcon()}
-            <Typography variant="body2" component="span" sx={{ ml: 0.5 }}>
-              {Math.abs(changePercentage)}%
-            </Typography>
-          </Box>
-        )}
-        
-        <Typography variant="body2" color="text.secondary">
-          {changeText || lastUpdated || ''}
-        </Typography>
-      </Box>
+      {/* Le texte de pourcentage et la barre de progression ont été supprimés */}
     </Paper>
   );
 };

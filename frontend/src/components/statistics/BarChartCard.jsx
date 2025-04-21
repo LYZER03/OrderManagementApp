@@ -22,7 +22,7 @@ const BarChartCard = ({
   subtitle,
   data, 
   dataKey = 'value',
-  color = '#2196f3',
+  color = '#51158C',
   xAxisDataKey = 'name',
   lastUpdated,
   height = 300,

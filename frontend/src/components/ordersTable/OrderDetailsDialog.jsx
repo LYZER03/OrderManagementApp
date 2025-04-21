@@ -22,22 +22,45 @@ const OrderDetailsDialog = ({ open, onClose, order }) => {
 
   if (!order) return null;
 
-  // Calcul des temps en minutes
-  const preparationTime = order.prepared_at && order.created_at
-    ? Math.abs(Math.round((new Date(order.prepared_at) - new Date(order.created_at)) / (1000 * 60)))
-    : null;
+  // Fonction pour calculer la différence de temps en minutes entre deux dates
+  const calculateTimeDiff = (endDateStr, startDateStr) => {
+    if (!endDateStr || !startDateStr) return null;
+    
+    try {
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
+      
+      // Vérifier que les dates sont valides
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.warn('Dates invalides:', { startDateStr, endDateStr });
+        return null;
+      }
+      
+      // Calculer la différence en minutes
+      const diffMs = Math.abs(endDate - startDate);
+      const diffMinutes = Math.round(diffMs / (1000 * 60));
+      
+      return diffMinutes;
+    } catch (error) {
+      console.error('Erreur lors du calcul de temps entre dates:', error, { endDateStr, startDateStr });
+      return null;
+    }
+  };
 
-  const controlTime = order.controlled_at && order.prepared_at
-    ? Math.abs(Math.round((new Date(order.controlled_at) - new Date(order.prepared_at)) / (1000 * 60)))
-    : null;
+  // Log des dates pour débogage
+  console.log('Dates de la commande:', {
+    created_at: order.created_at,
+    prepared_at: order.prepared_at,
+    controlled_at: order.controlled_at,
+    packed_at: order.packed_at,
+    completed_at: order.completed_at
+  });
 
-  const packingTime = order.packed_at && order.controlled_at
-    ? Math.abs(Math.round((new Date(order.packed_at) - new Date(order.controlled_at)) / (1000 * 60)))
-    : null;
-
-  const totalTime = order.completed_at && order.created_at
-    ? Math.abs(Math.round((new Date(order.completed_at) - new Date(order.created_at)) / (1000 * 60)))
-    : null;
+  // Calcul des temps en minutes avec la nouvelle fonction
+  const preparationTime = calculateTimeDiff(order.prepared_at, order.created_at);
+  const controlTime = calculateTimeDiff(order.controlled_at, order.prepared_at);
+  const packingTime = calculateTimeDiff(order.packed_at, order.controlled_at);
+  const totalTime = calculateTimeDiff(order.completed_at || order.packed_at, order.created_at);
 
   // Fonction pour obtenir le statut formaté
   const getStatusChip = (status) => {

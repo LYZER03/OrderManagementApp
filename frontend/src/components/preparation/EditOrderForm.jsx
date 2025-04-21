@@ -27,6 +27,14 @@ const EditOrderForm = ({ open, onClose, order, onOrderUpdated }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // Effet pour masquer automatiquement le message de succès après 2s
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   // Initialiser le formulaire avec les données de la commande
   useEffect(() => {
     if (order) {
@@ -81,10 +89,8 @@ const EditOrderForm = ({ open, onClose, order, onOrderUpdated }) => {
         onOrderUpdated();
       }
       
-      // Fermer le dialogue après un court délai
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+      // Fermer le dialogue immédiatement
+      onClose();
       
     } catch (err) {
       console.error('Erreur lors de la mise à jour de la commande', err);
@@ -170,7 +176,19 @@ const EditOrderForm = ({ open, onClose, order, onOrderUpdated }) => {
         <Button 
           onClick={onClose} 
           disabled={loading}
-          sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+          sx={{
+            fontSize: isMobile ? '1.1rem' : '1.15rem',
+            px: 4,
+            py: 1.5,
+            borderRadius: 3,
+            bgcolor: 'grey.100',
+            color: 'grey.800',
+            fontWeight: 600,
+            boxShadow: 1,
+            textTransform: 'none',
+            mr: 2,
+            '&:hover': { bgcolor: 'grey.200' }
+          }}
         >
           Annuler
         </Button>
@@ -179,8 +197,16 @@ const EditOrderForm = ({ open, onClose, order, onOrderUpdated }) => {
           variant="contained" 
           color="primary" 
           disabled={loading}
-          startIcon={loading ? <CircularProgress size={isMobile ? 16 : 20} /> : null}
-          sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
+          startIcon={loading ? <CircularProgress size={isMobile ? 20 : 24} /> : null}
+          sx={{
+            fontSize: isMobile ? '1.1rem' : '1.15rem',
+            px: 4,
+            py: 1.5,
+            borderRadius: 3,
+            fontWeight: 600,
+            textTransform: 'none',
+            boxShadow: 1
+          }}
         >
           {loading ? 'Mise à jour...' : isMobile ? 'Mettre à jour' : 'Mettre à jour'}
         </Button>

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import authService from './authService';
 
+//http://192.168.3.207:8000
 const API_BASE = window.location.hostname === 'localhost' 
   ? 'http://localhost:8000/api' 
   : 'http://192.168.1.16:8000/api';
@@ -48,24 +49,35 @@ const statsService = {
   // Récupérer les statistiques par statut de commande
   getOrdersByStatus: async (date = 'today') => {
     try {
-      const response = await axios.get(`${API_BASE}/orders/dashboard/?date=${date}`, getAuthHeaders());
-      const data = response.data;
+      // Récupérer toutes les commandes pour pouvoir les compter par statut
+      const response = await axios.get(`${API_BASE}/orders/?date=${date}`, getAuthHeaders());
+      const orders = response.data;
       
-      // Calculer le nombre de commandes par statut
-      const total = data.order_counts.total;
-      const completed = data.order_counts.completed;
-      const inProgress = data.order_counts.in_progress;
+      console.log(`Récupération de ${orders.length} commandes pour analyse des statuts`);
       
-      // Estimation des commandes par statut (à améliorer avec des endpoints spécifiques)
-      const created = Math.round(inProgress * 0.4);
-      const prepared = Math.round(inProgress * 0.35);
-      const controlled = Math.round(inProgress * 0.25);
+      // Compter les commandes par statut réel
+      const statusCounts = {
+        CREATED: 0,
+        PREPARED: 0,
+        CONTROLLED: 0,
+        PACKED: 0,
+        COMPLETED: 0
+      };
+      
+      // Comptage précis en fonction du statut réel de chaque commande
+      orders.forEach(order => {
+        if (statusCounts.hasOwnProperty(order.status)) {
+          statusCounts[order.status]++;
+        }
+      });
+      
+      console.log('Nombre de commandes par statut:', statusCounts);
       
       return [
-        { name: 'Créées', value: created },
-        { name: 'Préparées', value: prepared },
-        { name: 'Contrôlées', value: controlled },
-        { name: 'Emballées', value: completed }
+        { name: 'Créées', value: statusCounts.CREATED || 0 },
+        { name: 'Préparées', value: statusCounts.PREPARED || 0 },
+        { name: 'Contrôlées', value: statusCounts.CONTROLLED || 0 },
+        { name: 'Emballées', value: statusCounts.PACKED || 0 }
       ];
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques par statut', error);
@@ -144,38 +156,88 @@ const statsService = {
     }
   },
 
-  // Récupérer les statistiques de commandes mensuelles
+  // Récupérer les statistiques du nombre de commandes par jour
   getDailySales: async (date = 'today') => {
     try {
-      // Récupérer les commandes du jour ou d'une date spécifique
-      const response = await axios.get(`${API_BASE}/orders/dashboard/?date=${date}`, getAuthHeaders());
-      const data = response.data;
+      // Récupérer toutes les commandes
+      const response = await axios.get(`${API_BASE}/orders/`, getAuthHeaders());
+      const orders = response.data;
       
-      // Utiliser les données du dashboard pour créer des statistiques mensuelles
-      // Comme nous filtrons par jour, nous allons simuler des données mensuelles
-      // basées sur les données du jour
+      console.log(`Récupération de ${orders.length} commandes pour analyse par jour`);
       
-      // Créer un objet pour stocker le nombre de commandes par mois
-      const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-      const currentMonth = new Date().getMonth();
+      // Définir la période d'analyse (par défaut: les 7 derniers jours)
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(endDate.getDate() - 6); // 7 jours en tout (aujourd'hui inclus)
       
-      // Générer des données pour les 12 derniers mois basées sur les données du jour
-      const monthlySales = monthNames.map((name, index) => {
-        // Utiliser les données du jour pour le mois actuel
-        if (index === currentMonth) {
-          return { name, sales: data.order_counts.total || 0 };
-        }
-        
-        // Pour les autres mois, générer des données basées sur le mois actuel
-        // avec une variation aléatoire pour simuler des tendances
-        const baseSales = data.order_counts.total || 10;
-        const monthFactor = 0.7 + (Math.random() * 0.6); // Entre 0.7 et 1.3
-        return { name, sales: Math.round(baseSales * monthFactor) };
+      // Générer un tableau avec les 7 derniers jours
+      const days = [];
+      const current = new Date(startDate);
+      while (current <= endDate) {
+        days.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+      }
+      
+      // Créer un objet pour compter les commandes par jour et par statut
+      const dailyCounts = {};
+      
+      // Initialiser le compteur pour chaque jour
+      days.forEach(day => {
+        const dateKey = day.toISOString().split('T')[0]; // Format YYYY-MM-DD
+        dailyCounts[dateKey] = {
+          total: 0,
+          CREATED: 0,
+          PREPARED: 0,
+          CONTROLLED: 0,
+          PACKED: 0
+        };
       });
       
-      console.log('Statistiques mensuelles calculées:', monthlySales);
+      // Compter les commandes par jour et par statut
+      orders.forEach(order => {
+        // Extraire la date de création (format ISO string)
+        const createdDate = order.created_at ? new Date(order.created_at) : null;
+        if (!createdDate) return;
+        
+        const dateKey = createdDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+        
+        // Vérifier si la date est dans notre période d'analyse
+        if (dailyCounts[dateKey]) {
+          dailyCounts[dateKey].total += 1;
+          
+          // Compter par statut
+          if (dailyCounts[dateKey].hasOwnProperty(order.status)) {
+            dailyCounts[dateKey][order.status] += 1;
+          }
+        }
+      });
       
-      return monthlySales;
+      console.log('Nombre de commandes par jour:', dailyCounts);
+      
+      // Transformer les données pour le format attendu par le graphique
+      const ordersByDay = Object.entries(dailyCounts).map(([date, counts]) => {
+        // Formater la date pour l'affichage (ex: "21 avr")
+        const dateObj = new Date(date);
+        const day = dateObj.getDate();
+        const month = dateObj.toLocaleString('fr-FR', { month: 'short' });
+        const formattedDate = `${day} ${month}`;
+        
+        return {
+          name: formattedDate,  // Date formatée pour l'axe X
+          barres: counts.total, // Nombre total de commandes pour les barres
+          courbe: counts.total, // Même valeur pour la courbe
+          details: `${counts.CREATED} nouvelles, ${counts.PREPARED} préparées, ${counts.CONTROLLED} contrôlées, ${counts.PACKED} emballées`
+        };
+      }).sort((a, b) => {
+        // Trier par date (croissant)
+        const dateA = new Date(a.name.split(' ')[0] + ' ' + a.name.split(' ')[1]);
+        const dateB = new Date(b.name.split(' ')[0] + ' ' + b.name.split(' ')[1]);
+        return dateA - dateB;
+      });
+      
+      console.log('Commandes par jour formatées pour l\'affichage:', ordersByDay);
+      
+      return ordersByDay;
     } catch (error) {
       console.error('Erreur lors de la récupération des commandes mensuelles', error);
       throw error;
@@ -283,6 +345,111 @@ const statsService = {
     }
   },
   
+  // Récupérer les statistiques de performance des agents
+  getAgentPerformance: async (date = 'today') => {
+    try {
+      // Récupérer les commandes pour analyser les performances réelles
+      const allOrders = await axios.get(`${API_BASE}/orders/?date=${date}`, getAuthHeaders());
+      const orders = allOrders.data;
+      
+      console.log(`Récupération de ${orders.length} commandes pour analyse des performances réelles`);
+      
+      // Créer un map pour stocker les performances de chaque agent
+      const agentsMap = {};
+      
+      // Analyser chaque commande pour extraire les agents et leurs actions
+      orders.forEach(order => {
+        // Récupérer les détails des agents depuis les données de commande
+        const agents = [
+          { id: order.creator, details: order.creator_details, type: 'creator' },
+          { id: order.preparer, details: order.preparer_details, type: 'preparer' },
+          { id: order.controller, details: order.controller_details, type: 'controller' },
+          { id: order.packer, details: order.packer_details, type: 'packer' }
+        ];
+        
+        // Pour chaque agent impliqué dans la commande
+        agents.forEach(agent => {
+          if (!agent.id || !agent.details) return;
+          
+          // Créer ou mettre à jour l'agent dans le map si nécessaire
+          if (!agentsMap[agent.id]) {
+            const fullName = agent.details.first_name && agent.details.last_name
+              ? `${agent.details.first_name} ${agent.details.last_name}`
+              : agent.details.username;
+              
+            agentsMap[agent.id] = {
+              id: agent.id,
+              name: fullName || `Agent ${agent.id}`,
+              username: agent.details.username || `agent${agent.id}`,
+              role: agent.details.role || 'AGENT',
+              preparedOrders: 0,
+              controlledOrders: 0,
+              packedOrders: 0,
+              // Le nombre de lignes moyen est estimé à partir des données réelles
+              avgLinesPerOrder: order.line_count || 5
+            };
+          }
+          
+          // Mettre à jour les compteurs en fonction du rôle de l'agent dans cette commande
+          // Si l'agent est un préparateur et que la commande a été préparée
+          if (agent.type === 'preparer' && order.preparer === agent.id && order.prepared_at) {
+            agentsMap[agent.id].preparedOrders += 1;
+          }
+          
+          // Si l'agent est un contrôleur et que la commande a été contrôlée
+          if (agent.type === 'controller' && order.controller === agent.id && order.controlled_at) {
+            agentsMap[agent.id].controlledOrders += 1;
+          }
+          
+          // Si l'agent est un emballeur et que la commande a été emballée
+          if (agent.type === 'packer' && order.packer === agent.id && order.packed_at) {
+            agentsMap[agent.id].packedOrders += 1;
+          }
+        });
+      });
+      
+      // Log des commandes pour débogage
+      console.log('Données de commandes pour débogage:');
+      orders.slice(0, 3).forEach(order => {
+        console.log(`Commande #${order.id} (${order.reference}) - Statut: ${order.status}`);
+        console.log(` Préparateur: ${order.preparer_details?.username || 'N/A'} (ID: ${order.preparer || 'N/A'})`);
+        console.log(` Contrôleur: ${order.controller_details?.username || 'N/A'} (ID: ${order.controller || 'N/A'})`);
+        console.log(` Emballeur: ${order.packer_details?.username || 'N/A'} (ID: ${order.packer || 'N/A'})`);
+      });
+      
+      // Log des performances calculées pour débogage
+      console.log('Performances calculées:');
+      Object.values(agentsMap).slice(0, 3).forEach(agent => {
+        console.log(`Agent: ${agent.name} (ID: ${agent.id})`);
+        console.log(` Commandes préparées: ${agent.preparedOrders}`);
+        console.log(` Commandes contrôlées: ${agent.controlledOrders}`);
+        console.log(` Commandes emballées: ${agent.packedOrders}`);
+      });
+      
+      // Convertir le map en tableau et trier par nombre total de commandes traitées (décroissant)
+      const agentPerformance = Object.values(agentsMap)
+        .filter(agent => {
+          // Garder uniquement les agents qui ont effectivement traité des commandes
+          return agent.preparedOrders > 0 || agent.controlledOrders > 0 || agent.packedOrders > 0;
+        })
+        .map(agent => ({
+          ...agent,
+          // Ajouter une propriété calculée pour le tri
+          totalOrders: agent.preparedOrders + agent.controlledOrders + agent.packedOrders
+        }))
+        .sort((a, b) => b.totalOrders - a.totalOrders)
+        .map(({ totalOrders, ...agent }) => agent); // Supprimer la propriété temporaire totalOrders
+      
+      console.log(`Performances réelles générées pour ${agentPerformance.length} agents actifs`);
+      
+      // Si aucun agent n'a été trouvé, retourner un tableau vide plutôt que des données fictives
+      return agentPerformance;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des performances des agents', error);
+      throw error;
+    }
+  },
+
   // Récupérer toutes les statistiques du tableau de bord pour les analyses avancées
   getDashboardStats: async (queryParams = '') => {
     try {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import gfcLogo from '../../assets/gfc_logo.webp';
+import gfcProvapLogo from '../../assets/gfc_provap_logo2.jpg';
 import { 
   AppBar, 
   Box, 
@@ -40,10 +41,13 @@ import TableViewIcon from '@mui/icons-material/TableView';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useAuth } from '../../context/AuthContext';
 import BackToHomeButton from './BackToHomeButton';
 
-const drawerWidth = 240;
+const expandedDrawerWidth = 240;
+const collapsedDrawerWidth = 64;
 
 const AppLayout = () => {
   const theme = useTheme();
@@ -51,7 +55,10 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [drawerExpanded, setDrawerExpanded] = useState(true);
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  const drawerWidth = drawerExpanded ? expandedDrawerWidth : collapsedDrawerWidth;
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -65,7 +72,7 @@ const AppLayout = () => {
   // Définition des éléments du menu en fonction du rôle de l'utilisateur
   const menuItems = [
     {
-      text: 'Tableau de bord',
+      text: 'MENU',
       icon: <DashboardIcon />,
       path: '/dashboard',
       roles: ['AGENT', 'MANAGER']
@@ -101,9 +108,9 @@ const AppLayout = () => {
       roles: ['MANAGER']
     },
     {
-      text: 'Analyses Avancées',
+      text: 'Table des Scores',
       icon: <BarChartIcon />,
-      path: '/advanced-analytics',
+      path: '/table_score',
       roles: ['MANAGER']
     },
     {
@@ -119,38 +126,81 @@ const AppLayout = () => {
     item.roles.includes(user?.role)
   );
 
+  const toggleDrawer = () => {
+    setDrawerExpanded(!drawerExpanded);
+  };
+  
   const drawer = (
     <Box sx={{ 
       height: '100%', 
       display: 'flex', 
       flexDirection: 'column', 
-      bgcolor: '#424242', 
-      color: 'white',
-      borderRadius: '16px',
-      m: 1.5,
-      boxShadow: '0 4px 20px 0 rgba(0,0,0,0.14), 0 7px 10px -5px rgba(66,66,66,0.4)',
-      overflow: 'hidden'
+      bgcolor: '#FFFFFF', 
+      color: 'black',
+      borderRight: '1px solid #EEEEEE',
+      position: 'relative',
+      overflowX: 'hidden',
+      transition: 'all 0.3s ease-in-out',
+      width: drawerWidth
     }}>
-      <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', bgcolor: '#424242' }}>
-        <Box 
-          component="img"
-          src={gfcLogo}
-          alt="GFC Logo"
-          sx={{ 
-            height: 40,
-            maxWidth: '100%',
-            objectFit: 'contain'
-          }}
-        />
+      {/* Header avec logo ou titre */}
+      <Box sx={{ 
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: drawerExpanded ? 'space-between' : 'center',
+        p: drawerExpanded ? 2 : 1,
+        height: '64px',
+        borderBottom: '1px solid #EEEEEE'
+      }}>
+        {drawerExpanded ? (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box 
+                component="img"
+                src={gfcProvapLogo}
+                alt="GFC Provap Logo"
+                sx={{ 
+                  height: 40,
+                  maxWidth: '70%',
+                  objectFit: 'contain'
+                }}
+              />
+              <Typography
+                variant="h6"
+                sx={{
+                  ml: 1.5,
+                  fontWeight: 700,
+                  color: '#333',
+                  letterSpacing: 1,
+                  fontSize: '1.2rem',
+                  whiteSpace: 'nowrap',
+                  fontFamily: 'Montserrat, Poppins, Roboto, Arial, sans-serif'
+                }}
+              >
+                Stock
+              </Typography>
+            </Box>
+            <IconButton onClick={toggleDrawer} size="small">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </>
+        ) : (
+          <IconButton onClick={toggleDrawer} size="small">
+            <MenuIcon fontSize="small" />
+          </IconButton>
+        )}
       </Box>
       
-
-      
-
-      
-      <List sx={{ px: 1, flex: 1, mt: 2, color: 'rgba(255, 255, 255, 0.9)', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+      {/* Menu items */}
+      <List sx={{ 
+        flex: 1, 
+        py: 1, 
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}>
         {filteredMenuItems.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+          <ListItem key={item.text} disablePadding>
             <ListItemButton 
               selected={location.pathname === item.path}
               onClick={() => {
@@ -158,71 +208,113 @@ const AppLayout = () => {
                 setMobileOpen(false);
               }}
               sx={{
-                borderRadius: 1,
-                py: 1,
-                pl: 2,
+                borderRadius: 0,
+                py: 2,
+                pl: drawerExpanded ? 2 : 1,
+                minHeight: '48px',
+                justifyContent: drawerExpanded ? 'flex-start' : 'center',
                 '&.Mui-selected': {
-                  bgcolor: 'rgba(255, 255, 255, 0.15)',
-                  color: '#fff',
+                  bgcolor: 'transparent',
+                  color: theme.palette.primary.main,
                   '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.25)'
+                    bgcolor: 'rgba(0, 0, 0, 0.04)'
                   },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    left: 0,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    height: '80%',
-                    width: '4px',
-                    bgcolor: '#fff',
-                    borderRadius: '0 4px 4px 0'
+                  '& .MuiListItemIcon-root': {
+                    color: theme.palette.primary.main
                   }
                 },
                 '&:hover': {
-                  bgcolor: 'rgba(255, 255, 255, 0.1)'
-                },
-                color: 'rgba(255, 255, 255, 0.7)'
+                  bgcolor: 'rgba(0, 0, 0, 0.04)'
+                }
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40, color: 'rgba(255, 255, 255, 0.7)' }}>
+              <ListItemIcon sx={{ 
+                minWidth: drawerExpanded ? 40 : 24, 
+                color: location.pathname === item.path ? theme.palette.primary.main : 'inherit'
+              }}>
                 {item.icon}
               </ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
-                primaryTypographyProps={{
-                  fontSize: 14,
-                  fontWeight: location.pathname === item.path ? 600 : 400
-                }}
-              />
+              {drawerExpanded && (
+                <ListItemText 
+                  primary={item.text} 
+                  primaryTypographyProps={{
+                    fontSize: 14,
+                    fontWeight: location.pathname === item.path ? 600 : 400,
+                    noWrap: true
+                  }}
+                />
+              )}
             </ListItemButton>
           </ListItem>
         ))}
       </List>
       
-      <Box sx={{ p: 2, mt: 'auto', bgcolor: '#424242' }}>
-        <Divider sx={{ mb: 2, bgcolor: 'rgba(255, 255, 255, 0.1)' }} />
-        <ListItemButton 
-          onClick={handleLogout}
-          sx={{ 
-            borderRadius: 1,
-            py: 1,
-            color: 'rgba(255, 255, 255, 0.7)',
-            '&:hover': {
-              bgcolor: 'rgba(255, 255, 255, 0.1)',
-            }
+      {/* Settings button at bottom */}
+      <Box sx={{ 
+        borderTop: '1px solid #EEEEEE',
+        display: 'flex',
+        justifyContent: drawerExpanded ? 'flex-start' : 'center'
+      }}>
+        <ListItemButton
+          onClick={() => navigate('/settings')}
+          sx={{
+            borderRadius: 0,
+            p: 1.5,
+            minWidth: drawerExpanded ? 'auto' : 40,
+            display: 'flex',
+            justifyContent: drawerExpanded ? 'flex-start' : 'center'
           }}
         >
-          <ListItemIcon sx={{ minWidth: 40, color: 'rgba(255, 255, 255, 0.7)' }}>
+          <ListItemIcon sx={{ 
+            minWidth: drawerExpanded ? 40 : 24,
+            color: location.pathname === '/settings' ? theme.palette.primary.main : 'inherit'
+          }}>
+            <SettingsIcon />
+          </ListItemIcon>
+          {drawerExpanded && (
+            <ListItemText 
+              primary="Paramètres" 
+              primaryTypographyProps={{
+                fontSize: 14,
+                fontWeight: location.pathname === '/settings' ? 600 : 400,
+              }}
+            />
+          )}
+        </ListItemButton>
+      </Box>
+      
+      {/* Logout button */}
+      <Box sx={{ 
+        borderTop: '1px solid #EEEEEE',
+        display: 'flex',
+        justifyContent: drawerExpanded ? 'flex-start' : 'center',
+        mb: 1
+      }}>
+        <ListItemButton
+          onClick={handleLogout}
+          sx={{
+            borderRadius: 0,
+            p: 1.5,
+            minWidth: drawerExpanded ? 'auto' : 40,
+            display: 'flex',
+            justifyContent: drawerExpanded ? 'flex-start' : 'center'
+          }}
+        >
+          <ListItemIcon sx={{ 
+            minWidth: drawerExpanded ? 40 : 24,
+            color: 'inherit'
+          }}>
             <LogoutIcon />
           </ListItemIcon>
-          <ListItemText 
-            primary="Sign Out" 
-            primaryTypographyProps={{ 
-              fontSize: '0.875rem', 
-              fontWeight: 400 
-            }} 
-          />
+          {drawerExpanded && (
+            <ListItemText 
+              primary="Déconnexion" 
+              primaryTypographyProps={{
+                fontSize: 14,
+                fontWeight: 400,
+              }}
+            />
+          )}
         </ListItemButton>
       </Box>
     </Box>
@@ -235,8 +327,8 @@ const AppLayout = () => {
         position="fixed"
         elevation={0}
         sx={{ 
-          width: { sm: `calc(100% - ${drawerWidth + 16}px)` }, 
-          ml: { sm: `${drawerWidth + 16}px` },
+          width: { sm: `calc(100% - ${drawerWidth}px)` }, 
+          ml: { sm: `${drawerWidth}px` },
           bgcolor: '#ffffff',
           borderBottom: `1px solid ${theme.palette.divider}`,
           boxShadow: 'none'
@@ -257,7 +349,7 @@ const AppLayout = () => {
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' }, color: theme.palette.text.primary }}
+            sx={{ ml: 1.5, mr: 2, display: { sm: 'none' }, color: theme.palette.text.primary }}
           >
             <MenuIcon />
           </IconButton>
@@ -271,6 +363,7 @@ const AppLayout = () => {
                   onClick={() => navigate('/dashboard')}
                   sx={{ 
                     mr: 1,
+                    ml: { xs: 1.5, sm: 0 },
                     color: theme.palette.text.secondary,
                     '&:hover': {
                       bgcolor: 'rgba(0, 0, 0, 0.04)'
@@ -298,10 +391,29 @@ const AppLayout = () => {
             <Box sx={{ flexGrow: 1 }} />
             
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <IconButton size="small" sx={{ mx: 0.5, color: '#757575' }} onClick={handleLogout}>
-                <LogoutIcon fontSize="small" />
-              </IconButton>
-            </Box>
+  {user && (
+    <Typography
+      variant="subtitle2"
+      sx={{
+        mx: 1.5,
+        color: theme.palette.text.primary,
+        fontWeight: 600,
+        fontSize: '1rem',
+        letterSpacing: 0.2,
+        textTransform: 'none',
+        maxWidth: 180,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}
+    >
+      {user.full_name || user.username}
+    </Typography>
+  )}
+  <IconButton size="small" sx={{ mx: 0.5, color: '#757575' }} onClick={handleLogout}>
+    <LogoutIcon fontSize="small" />
+  </IconButton>
+</Box>
           </Box>
         </Toolbar>
       </AppBar>
@@ -368,7 +480,8 @@ const AppLayout = () => {
           minHeight: '100vh',
           position: 'relative',
           overflowX: 'hidden',
-          ml: { sm: 2 }
+          ml: { sm: 0 },
+          transition: 'all 0.3s ease-in-out'
         }}
       >
         <Toolbar sx={{ bgcolor: 'transparent' }} />

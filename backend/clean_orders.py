@@ -12,7 +12,7 @@ import argparse
 from django.utils import timezone
 
 # Configurer l'environnement Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'order_management.settings')
 django.setup()
 
 # Importer les modèles après la configuration de Django

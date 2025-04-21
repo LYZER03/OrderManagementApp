@@ -77,7 +77,7 @@ const OrdersList = ({
             <OrderCardMobile 
               key={order.id} 
               order={order} 
-              onValidate={onValidate} 
+              onValidate={onValidate}
               onViewDetails={onViewDetails} 
             />
           ))}

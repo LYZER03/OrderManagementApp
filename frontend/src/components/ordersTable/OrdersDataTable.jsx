@@ -283,40 +283,80 @@ const OrdersDataTable = ({
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" id="tableTitle" component="div">
-            Table des commandes
-          </Typography>
-          <Stack direction="row" spacing={1}>
-  {/* Filtres de statut toujours visibles */}
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
-    {statusOptions.map((status) => (
-      <Chip
-        key={status.value}
-        label={status.label}
-        color={selectedStatus === status.value ? status.color : 'default'}
-        onClick={() => handleStatusFilter(status.value)}
-        clickable
-        variant={selectedStatus === status.value ? 'filled' : 'outlined'}
-        sx={{ fontWeight: 600 }}
-      />
-    ))}
-    <Button size="small" variant="outlined" color="inherit" onClick={handleClearFilters} sx={{ ml: 2 }}>
-      Réinitialiser les filtres
-    </Button>
-  </Box>
+        <Box sx={{ p: 2 }}>
+          {/* En-tête avec titre et compteur */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            mb: 2 
+          }}>
+            <Typography variant="h6" component="div">
+              Filtres et actions
+            </Typography>
+            {selected.length > 0 && (
+              <Typography variant="subtitle2" color="error.main">
+                {selected.length} commande(s) sélectionnée(s)
+              </Typography>
+            )}
+          </Box>
+          
+          {/* Filtres de statut et boutons d'action */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            gap: 2
+          }}>
+            {/* Boîte pour les filtres de statut */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap',
+              alignItems: 'center', 
+              gap: 1
+            }}>
+              {statusOptions.map((status) => (
+                <Chip
+                  key={status.value}
+                  label={status.label}
+                  color={selectedStatus === status.value ? status.color : 'default'}
+                  onClick={() => handleStatusFilter(status.value)}
+                  clickable
+                  variant={selectedStatus === status.value ? 'filled' : 'outlined'}
+                  sx={{ fontWeight: 600 }}
+                />
+              ))}
+            </Box>
             
-            <Button
-              variant="contained"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handleOpenDeleteDialog}
-              disabled={selected.length === 0}
-              size="small"
-            >
-              Supprimer ({selected.length})
-            </Button>
-          </Stack>
+            {/* Boutons d'action - Placés dans une boîte séparée */}
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2,
+              alignItems: 'center',
+              alignSelf: { xs: 'flex-end', sm: 'center' }
+            }}>
+              <Button 
+                size="small" 
+                variant="outlined" 
+                color="inherit" 
+                onClick={handleClearFilters}
+              >
+                Réinitialiser les filtres
+              </Button>
+              
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={handleOpenDeleteDialog}
+                disabled={selected.length === 0}
+                size="small"
+              >
+                Supprimer ({selected.length})
+              </Button>
+            </Box>
+          </Box>
         </Box>
 
         {filterOpen && (
