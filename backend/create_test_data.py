@@ -16,28 +16,17 @@ User = get_user_model()
 def create_test_users():
     """Create test users with different roles"""
     # Create manager users
-    if not User.objects.filter(username='manager1').exists():
+    if not User.objects.filter(username='admin').exists():
         User.objects.create_user(
-            username='manager1',
-            email='manager1@example.com',
-            password='password123',
-            first_name='Jean',
-            last_name='Dupont',
+            username='admin',
+            email='admin@example.com',
+            password='1234',
+            first_name='admin',
+            last_name='admin',
             role='MANAGER',
             is_staff=True
         )
-    
-    if not User.objects.filter(username='manager2').exists():
-        User.objects.create_user(
-            username='manager2',
-            email='manager2@example.com',
-            password='password123',
-            first_name='Marie',
-            last_name='Martin',
-            role='MANAGER',
-            is_staff=True
-        )
-    
+     
     # Create agent users
     agent_data = [
         {'username': 'agent1', 'first_name': 'Pierre', 'last_name': 'Bernard'},
@@ -52,7 +41,7 @@ def create_test_users():
             User.objects.create_user(
                 username=data['username'],
                 email=f"{data['username']}@example.com",
-                password='password123',
+                password='1234',
                 first_name=data['first_name'],
                 last_name=data['last_name'],
                 role='AGENT'

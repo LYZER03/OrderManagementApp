@@ -223,10 +223,10 @@ const LoginForm = () => {
               Comptes de test
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>Manager:</strong> username: manager, password: password123
+              <strong>Manager:</strong> username: admin, password: 1234
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>Agent:</strong> username: agent1, password: password123
+              <strong>Agent:</strong> username: agent1, password: 1234
             </Typography>
           </Box>
         </Stack>
