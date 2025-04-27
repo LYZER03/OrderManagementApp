@@ -43,6 +43,8 @@ import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import prestaLogo from '../../assets/prestashop.png';
 import { useAuth } from '../../context/AuthContext';
 import BackToHomeButton from './BackToHomeButton';
 
@@ -111,6 +113,13 @@ const AppLayout = () => {
       text: 'Table des Scores',
       icon: <BarChartIcon />,
       path: '/table_score',
+      roles: ['MANAGER']
+    },
+    {
+      text: 'Commandes PrestaShop',
+      icon: <img src={prestaLogo} alt="PrestaShop" style={{ width: 24, height: 24, objectFit: 'contain', marginRight: 2 }} />,
+
+      path: '/presta-orders',
       roles: ['MANAGER']
     },
     {

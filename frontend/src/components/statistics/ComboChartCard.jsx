@@ -121,6 +121,9 @@ const ComboChartCard = ({
               fill={barColor}
               radius={[4, 4, 0, 0]}
               barSize={isMobile ? 15 : 30}
+              animationDuration={800}
+              animationEasing="ease-in-out"
+              isAnimationActive={true}
             />
             <Line 
               type="monotone" 
@@ -130,6 +133,9 @@ const ComboChartCard = ({
               strokeWidth={2}
               dot={{ r: 3 }}
               activeDot={{ r: 5 }}
+              animationDuration={1200}
+              animationEasing="ease-out"
+              isAnimationActive={true}
             />
           </ComposedChart>
         </ResponsiveContainer>

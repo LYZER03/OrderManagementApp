@@ -1,5 +1,29 @@
 # Changelog - Application de Gestion de Commandes Interne
 
+## [Version 0.11.0] - 2025-04-27
+
+### Nouvelles pages et fonctionnalités
+- Création d'une page frontend pour afficher les commandes du jour provenant de PrestaShop, avec affichage du nom du client.
+- Intégration d'une nouvelle route backend `/api/orders/today` pour exposer les commandes du jour au format JSON.
+- Ajout d'une page React `PrestaOrdersPage` (non liée au menu principal) permettant de visualiser les commandes du jour dans un tableau moderne.
+
+### Améliorations statistiques
+- Suppression du KPI "Expédiées" et ajout du KPI "Contrôlées" sur la page statistiques.
+- Ajustement des largeurs des KPI restants (25% chacun).
+- Les KPI affichent désormais des vraies données.
+- Suppression des pourcentages dans les KPI.
+- Modification du graphique "Répartition des commandes" : affichage de l'évolution des commandes par jour (barres + courbe).
+- Correction de la fonction `getAgentPerformance` pour utiliser les vraies données.
+
+### Table des scores
+- Création d'une page "Table des Scores" affichant la production quotidienne des agents (préparées, contrôlées, emballées) avec code couleur et légende.
+- Rafraîchissement automatique des données toutes les 60 secondes.
+- Page accessible uniquement par URL directe.
+
+### Corrections et techniques
+- Correction de l'intégration du nom du client pour chaque commande PrestaShop.
+- Suppression de l'ancien script [presta_test.py](cci:7://file:///c:/Users/donga/CascadeProjects/OrderManagementApp/backend/presta_test.py:0:0-0:0) devenu obsolète.
+
 ## [Version 0.10.0] - 2025-04-17
 
 ### Nouvelles fonctionnalités et améliorations

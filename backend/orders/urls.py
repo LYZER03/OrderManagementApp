@@ -4,6 +4,7 @@ from .views import (
     OrderDetailView, PreparationView, ControlView, PackingView,
     DashboardView, OrderReferenceView, OrderBulkDeleteView
 )
+from .presta_views import PrestaOrdersView
 
 urlpatterns = [
     # Basic order management
@@ -26,4 +27,7 @@ urlpatterns = [
     
     # Dashboard for managers
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    
+    # PrestaShop orders (manager only)
+    path('presta-orders/', PrestaOrdersView.as_view(), name='presta-orders'),
 ]

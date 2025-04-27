@@ -53,6 +53,20 @@ class OrderListCreateView(APIView):
             end_date = today
             print(f"Paramètre 'yesterday' détecté: filtrage du {start_date} au {end_date}")
             
+        # Traiter le paramètre 'week'
+        elif date_param == 'week':
+            # Pour la semaine, commencer 7 jours avant aujourd'hui
+            start_date = today - timedelta(days=6)  # 7 jours incluant aujourd'hui
+            end_date = today + timedelta(days=1)    # Jusqu'à la fin d'aujourd'hui
+            print(f"Paramètre 'week' détecté: filtrage du {start_date} au {end_date}")
+            
+        # Traiter le paramètre 'month'
+        elif date_param == 'month':
+            # Pour le mois, commencer 30 jours avant aujourd'hui
+            start_date = today - timedelta(days=29)  # 30 jours incluant aujourd'hui
+            end_date = today + timedelta(days=1)     # Jusqu'à la fin d'aujourd'hui
+            print(f"Paramètre 'month' détecté: filtrage du {start_date} au {end_date}")
+            
         # Si un paramètre de date spécifique est fourni (et pas de plage de dates)
         elif date_param != 'today' and date_param != 'all':
             try:

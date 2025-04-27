@@ -20,10 +20,13 @@ const statsService = {
   // Récupérer les statistiques générales
   getGeneralStats: async (date = 'today') => {
     try {
-      console.log('URL dashboard:', `${API_BASE}/orders/dashboard/?date=${date}`);
+      // Forcer date à être une chaîne valide
+      const dateParam = String(date || 'today');
+      console.log(`getGeneralStats - Période demandée: [${dateParam}]`);
+      console.log('URL dashboard:', `${API_BASE}/orders/dashboard/?date=${dateParam}`);
       console.log('Headers:', getAuthHeaders());
       
-      const response = await axios.get(`${API_BASE}/orders/dashboard/?date=${date}`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE}/orders/dashboard/?date=${dateParam}`, getAuthHeaders());
       console.log('Réponse dashboard:', response.data);
       
       const data = response.data;
@@ -48,9 +51,12 @@ const statsService = {
 
   // Récupérer les statistiques par statut de commande
   getOrdersByStatus: async (date = 'today') => {
+    // Forcer date à être une chaîne valide
+    const dateParam = String(date || 'today');
+    console.log(`getOrdersByStatus - Période demandée: [${dateParam}]`);
     try {
       // Récupérer toutes les commandes pour pouvoir les compter par statut
-      const response = await axios.get(`${API_BASE}/orders/?date=${date}`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE}/orders/?date=${dateParam}`, getAuthHeaders());
       const orders = response.data;
       
       console.log(`Récupération de ${orders.length} commandes pour analyse des statuts`);
@@ -158,24 +164,52 @@ const statsService = {
 
   // Récupérer les statistiques du nombre de commandes par jour
   getDailySales: async (date = 'today') => {
+    // Forcer date à être une chaîne valide
+    const dateParam = String(date || 'today');
+    console.log(`getDailySales - Période demandée: [${dateParam}]`);
     try {
-      // Récupérer toutes les commandes
-      const response = await axios.get(`${API_BASE}/orders/`, getAuthHeaders());
+      // Récupérer toutes les commandes avec le filtre de période spécifié
+      const response = await axios.get(`${API_BASE}/orders/?date=${dateParam}`, getAuthHeaders());
+      console.log(`URL avec filtrage de période: ${API_BASE}/orders/?date=${dateParam}`);
       const orders = response.data;
       
       console.log(`Récupération de ${orders.length} commandes pour analyse par jour`);
       
-      // Définir la période d'analyse (par défaut: les 7 derniers jours)
+      // Définir la période d'analyse en fonction du filtre sélectionné
       const endDate = new Date();
       const startDate = new Date(endDate);
-      startDate.setDate(endDate.getDate() - 6); // 7 jours en tout (aujourd'hui inclus)
       
-      // Générer un tableau avec les 7 derniers jours
+      // Ajuster la période selon le paramètre de date
+      if (dateParam === 'today') {
+        // Pour 'today', afficher uniquement aujourd'hui
+        console.log('Filtre: Aujourd\'hui - Affichage du jour actuel uniquement');
+        // startDate est déjà égal à endDate (aujourd'hui)
+      } else if (dateParam === 'week') {
+        // Pour 'week', afficher les 7 derniers jours
+        console.log('Filtre: 7 jours - Affichage des 7 derniers jours');
+        startDate.setDate(endDate.getDate() - 6); // 7 jours en tout (aujourd'hui inclus)
+      } else if (dateParam === 'month') {
+        // Pour 'month', afficher les 30 derniers jours
+        console.log('Filtre: 1 mois - Affichage des 30 derniers jours');
+        startDate.setDate(endDate.getDate() - 29); // 30 jours en tout (aujourd'hui inclus)
+      } else {
+        // Pour les autres cas (date spécifique), défaut à 7 jours
+        startDate.setDate(endDate.getDate() - 6); // 7 jours par défaut
+      }
+      
+      // Générer un tableau avec tous les jours de la période sélectionnée
       const days = [];
       const current = new Date(startDate);
+      
+      // Définir l'intervalle entre les dates pour l'affichage
+      // Toujours définir l'intervalle à 1 pour montrer tous les jours
+      const interval = 1;
+      const dayDiff = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
+      console.log(`Période de ${dayDiff} jours: affichage des dates avec un intervalle de ${interval} jour`);
+      
       while (current <= endDate) {
         days.push(new Date(current));
-        current.setDate(current.getDate() + 1);
+        current.setDate(current.getDate() + interval);
       }
       
       // Créer un objet pour compter les commandes par jour et par statut
@@ -216,11 +250,32 @@ const statsService = {
       
       // Transformer les données pour le format attendu par le graphique
       const ordersByDay = Object.entries(dailyCounts).map(([date, counts]) => {
-        // Formater la date pour l'affichage (ex: "21 avr")
+        // Formater la date pour l'affichage avec un format adapté au type de période
         const dateObj = new Date(date);
-        const day = dateObj.getDate();
-        const month = dateObj.toLocaleString('fr-FR', { month: 'short' });
-        const formattedDate = `${day} ${month}`;
+        let formattedDate;
+        
+        if (dateParam === 'month') {
+          // Pour la vue mensuelle, inclure le jour et le mois (format court)
+          const day = dateObj.getDate();
+          const month = dateObj.toLocaleString('fr-FR', { month: 'short' });
+          formattedDate = `${day} ${month}`;
+          
+          // Ajouter l'année si ce n'est pas l'année en cours
+          const currentYear = new Date().getFullYear();
+          if (dateObj.getFullYear() !== currentYear) {
+            formattedDate += ` ${dateObj.getFullYear()}`;
+          }
+        } else if (dateParam === 'today') {
+          // Pour la vue d'aujourd'hui, inclure l'heure
+          const hours = dateObj.getHours().toString().padStart(2, '0');
+          const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+          formattedDate = `${hours}:${minutes}`;
+        } else {
+          // Vue par défaut (semaine): jour et mois
+          const day = dateObj.getDate();
+          const month = dateObj.toLocaleString('fr-FR', { month: 'short' });
+          formattedDate = `${day} ${month}`;
+        }
         
         return {
           name: formattedDate,  // Date formatée pour l'axe X
@@ -266,9 +321,12 @@ const statsService = {
 
   // Récupérer les statistiques de commandes complétées (emballées)
   getCompletedTasks: async (date = 'today') => {
+    // Forcer date à être une chaîne valide
+    const dateParam = String(date || 'today');
+    console.log(`getCompletedTasks - Période demandée: [${dateParam}]`);
     try {
       // Récupérer les commandes du jour ou d'une date spécifique
-      const response = await axios.get(`${API_BASE}/orders/dashboard/?date=${date}`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE}/orders/dashboard/?date=${dateParam}`, getAuthHeaders());
       const data = response.data;
       
       // Utiliser les données du dashboard pour créer des statistiques mensuelles
@@ -304,9 +362,12 @@ const statsService = {
 
   // Récupérer les statistiques de commandes récentes
   getRecentOrders: async (date = 'today') => {
+    // Forcer date à être une chaîne valide
+    const dateParam = String(date || 'today');
+    console.log(`getRecentOrders - Période demandée: [${dateParam}]`);
     try {
       // Récupérer les commandes récentes du jour ou d'une date spécifique
-      const response = await axios.get(`${API_BASE}/orders/?date=${date}`, getAuthHeaders());
+      const response = await axios.get(`${API_BASE}/orders/?date=${dateParam}`, getAuthHeaders());
       
       // Ajouter des logs pour déboguer
       console.log('Réponse des commandes récentes:', response.data);

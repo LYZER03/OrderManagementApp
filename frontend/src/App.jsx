@@ -20,6 +20,7 @@ import StatisticsPage from './pages/StatisticsPage';
 import UsersPage from './pages/UsersPage';
 import OrdersTablePage from './pages/OrdersTablePage';
 import TableDesScoresPage from './pages/TableDesScoresPage';
+import PrestaOrdersPage from './pages/PrestaOrdersPage';
 
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
 
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/orders-table" element={<OrdersTablePage />} />
+                <Route path="/presta-orders" element={<PrestaOrdersPage />} />
                 <Route path="/profile" element={<div>Page de profil (à implémenter)</div>} />
                 <Route path="/settings" element={<div>Page de paramètres (à implémenter)</div>} />
               </Route>

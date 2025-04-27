@@ -10,6 +10,11 @@ from authentication.models import User
 from django.db.models import Q, Count
 from rest_framework.decorators import permission_classes
 
+# Importer le gestionnaire de plages de dates
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from date_range_handler import get_date_range
+
 # Create your views here.
 class OrderListCreateView(APIView):
     permission_classes = (permissions.IsAuthenticated,)

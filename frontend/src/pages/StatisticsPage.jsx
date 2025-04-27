@@ -11,7 +11,9 @@ import {
   Alert,
   Button,
   Tooltip,
-  IconButton
+  IconButton,
+  ToggleButtonGroup,
+  ToggleButton
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -67,8 +69,11 @@ const StatisticsPage = () => {
     return <Navigate to="/" replace />;
   }
 
-  // Fonction pour charger les données statistiques
-  const fetchStats = async (isRefresh = false) => {
+  // Fonction pour charger les données statistiques avec une période spécifique
+  const fetchStats = async (period = null, isRefresh = false) => {
+    // Utiliser la période fournie ou la période actuelle
+    const currentPeriod = period || periodFilter;
+    
     if (isRefresh) {
       setRefreshing(true);
     } else {
@@ -77,13 +82,10 @@ const StatisticsPage = () => {
     setError('');
       
     try {
-      console.log('Chargement des statistiques...');
-      
-      // Utiliser la période sélectionnée comme paramètre de date
-      const dateParam = periodFilter;
+      console.log(`Chargement des statistiques pour la période ${currentPeriod}...`);
       
       // Charger d'abord les statistiques générales pour vérifier la connexion
-      const generalStatsData = await statsService.getGeneralStats(dateParam);
+      const generalStatsData = await statsService.getGeneralStats(currentPeriod);
       console.log('Statistiques générales chargées:', generalStatsData);
       
       // Puis charger le reste des données
@@ -95,12 +97,12 @@ const StatisticsPage = () => {
         completedTasksData,
         recentOrdersData
       ] = await Promise.all([
-        statsService.getOrdersByStatus(dateParam),
+        statsService.getOrdersByStatus(currentPeriod),
         statsService.getProcessingTimeByStep(),
-        statsService.getAgentPerformance(dateParam),
-        statsService.getDailySales(dateParam),
-        statsService.getCompletedTasks(dateParam),
-        statsService.getRecentOrders(dateParam)
+        statsService.getAgentPerformance(currentPeriod),
+        statsService.getDailySales(currentPeriod),
+        statsService.getCompletedTasks(currentPeriod),
+        statsService.getRecentOrders(currentPeriod)
       ]);
       
       // Mettre à jour les états avec les données récupérées
@@ -139,43 +141,50 @@ const StatisticsPage = () => {
   // Fonction pour rafraîchir les données
   const handleRefresh = () => {
     setRefreshCounter(prev => prev + 1); // Incrémenter le compteur pour forcer les composants à se rafraîchir
-    fetchStats(true);
+    fetchStats(periodFilter, true); // Utiliser la période actuelle
   };
   
   // Fonction pour changer la période
   const handlePeriodChange = (period) => {
+    if (!period || period === periodFilter) return; // Éviter les appels inutiles si période inchangée
+    
+    console.log(`Changement de période vers: ${period} (depuis: ${periodFilter})`);
+    
+    // Forcer le rafraîchissement des données avec la nouvelle période
+    setLoading(true); // Montrer le spinner pendant le chargement
     setPeriodFilter(period);
     setRefreshCounter(prev => prev + 1); // Incrémenter le compteur pour forcer les composants à se rafraîchir
-    fetchStats(true);
+    
+    // Appel explicite avec la nouvelle période
+    fetchStats(period, true)
+      .then(() => {
+        console.log(`Données mises à jour avec succès pour la période: ${period}`);
+      })
+      .catch(err => {
+        console.error(`Erreur lors de la mise à jour pour la période ${period}:`, err);
+      });
   };
   
-  // Charger les données au premier rendu et lorsque la période change
+  // Charger les données au premier rendu
   useEffect(() => {
-    console.log('Chargement initial des statistiques...');
-    fetchStats();
+    console.log(`Chargement initial des statistiques pour la période: ${periodFilter}`);
+    fetchStats(periodFilter, false); // Passer explicitement la période actuelle
     
     // Mettre en place un intervalle de rafraîchissement automatique toutes les 60 secondes
     const autoRefreshInterval = setInterval(() => {
       console.log('Rafraîchissement automatique des statistiques...');
-      fetchStats(true);
+      fetchStats(periodFilter, true); // Passer la période actuelle pour le rafraîchissement
     }, 60000);
     
     // Nettoyer l'intervalle lorsque le composant est démonté
     return () => clearInterval(autoRefreshInterval);
-  }, []);
-  
-  // Charger les données au montage du composant
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  }, [periodFilter]); // Re-exécuter l'effet lorsque periodFilter change
 
   // Afficher un indicateur de chargement
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-          <CircularProgress />
-        </Box>
+      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <CircularProgress size={60} />
       </Container>
     );
   }
@@ -192,131 +201,55 @@ const StatisticsPage = () => {
   }
 
   return (
-    <Container 
-      maxWidth="xl" 
-      sx={{ 
-        mt: isMobile ? 2 : 4, 
-        mb: isMobile ? 2 : 4,
-        px: isMobile ? 1 : 3,
-        width: '100%'
-      }}
-    >
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: { xs: 2, sm: 3 },
-          mb: { xs: 3, sm: 4 },
-          borderRadius: 2,
-          background: 'linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%)',
-          boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)'
-        }}
-      >
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'flex-start', sm: 'center' }, 
-          mb: { xs: 2, sm: 1 }
-        }}>
-          <Box sx={{ mb: { xs: 2, sm: 0 } }}>
-            <Typography 
-              variant={isMobile ? "h5" : "h4"} 
-              gutterBottom 
+    <Container maxWidth="xl" sx={{ mt: isMobile ? 2 : 4, mb: isMobile ? 2 : 4, px: isMobile ? 1 : 3, width: '100%' }}>
+      <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 3, sm: 4 }, borderRadius: 2, background: 'linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%)', boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant={isMobile ? "h5" : "h4"} component="h1" gutterBottom fontWeight="medium" sx={{ mb: 0 }}>
+            Tableau de bord statistiques
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <ToggleButtonGroup
+              value={periodFilter}
+              exclusive
+              onChange={(e, newPeriod) => {
+                if (newPeriod !== null) {
+                  handlePeriodChange(newPeriod);
+                }
+              }}
+              aria-label="filtre de période"
+              size="small"
               sx={{ 
-                fontWeight: 600,
-                mb: 0.5,
-                color: theme.palette.text.primary,
-                fontSize: { xs: '1.5rem', sm: '2rem' }
+                backgroundColor: 'background.paper',
+                boxShadow: 1,
+                borderRadius: 1,
+                '& .MuiToggleButton-root': {
+                  textTransform: 'none',
+                  fontSize: '0.75rem',
+                  fontWeight: 'medium'
+                }
               }}
             >
-              Performance des Employés
-            </Typography>
-            <Typography 
-              variant="body1" 
-              color="text.secondary"
-              sx={{ 
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-                maxWidth: { sm: '80%' }
-              }}
-            >
-              Analyse des performances et productivité des agents
-            </Typography>
-          </Box>
-
-          {/* Filtres et rafraîchissement alignés au centre sur mobile, à droite sur desktop */}
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'flex-start', sm: 'center' }, 
-            alignSelf: { xs: 'stretch', sm: 'auto' },
-            gap: { xs: 2, sm: 1 }
-          }}>
-            {/* Filtres de période */}
-            <Box sx={{ 
-              display: 'flex', 
-              borderRadius: 2, 
-              bgcolor: 'background.paper', 
-              boxShadow: '0px 1px 6px rgba(0, 0, 0, 0.08)',
-              overflow: 'hidden', 
-              width: { xs: '100%', sm: 'auto' }
-            }}>
-              <Button
-                size={isMobile ? "small" : "medium"}
-                variant={periodFilter === 'today' ? 'contained' : 'text'}
-                color={periodFilter === 'today' ? 'primary' : 'inherit'}
-                onClick={() => handlePeriodChange('today')}
-                sx={{ 
-                  flexGrow: { xs: 1, sm: 0 },
-                  px: { xs: 1, sm: 2 }, 
-                  py: { xs: 0.75, sm: 1 },
-                  borderRadius: 0
-                }}
-              >
+              <ToggleButton value="today" aria-label="aujourd'hui">
                 Aujourd'hui
-              </Button>
-              <Button
-                size={isMobile ? "small" : "medium"}
-                variant={periodFilter === 'week' ? 'contained' : 'text'}
-                color={periodFilter === 'week' ? 'primary' : 'inherit'}
-                onClick={() => handlePeriodChange('week')}
-                sx={{ 
-                  flexGrow: { xs: 1, sm: 0 },
-                  px: { xs: 1, sm: 2 }, 
-                  py: { xs: 0.75, sm: 1 },
-                  borderRadius: 0,
-                  borderLeft: '1px solid rgba(0,0,0,0.05)',
-                  borderRight: '1px solid rgba(0,0,0,0.05)'
-                }}
-              >
+              </ToggleButton>
+              <ToggleButton value="week" aria-label="7 jours">
                 7 jours
-              </Button>
-              <Button
-                size={isMobile ? "small" : "medium"}
-                variant={periodFilter === 'month' ? 'contained' : 'text'}
-                color={periodFilter === 'month' ? 'primary' : 'inherit'}
-                onClick={() => handlePeriodChange('month')}
-                sx={{ 
-                  flexGrow: { xs: 1, sm: 0 },
-                  px: { xs: 1, sm: 2 }, 
-                  py: { xs: 0.75, sm: 1 },
-                  borderRadius: 0
-                }}
-              >
+              </ToggleButton>
+              <ToggleButton value="month" aria-label="1 mois">
                 1 mois
-              </Button>
-            </Box>
-            
-            {/* Bouton de rafraîchissement */}
+              </ToggleButton>
+            </ToggleButtonGroup>
+
             <Tooltip title="Rafraîchir les données">
               <IconButton 
-                onClick={handleRefresh}
-                disabled={loading || refreshing}
-                color="primary"
-                size={isMobile ? "small" : "medium"}
+                onClick={handleRefresh} 
+                disabled={refreshing}
                 sx={{ 
-                  boxShadow: '0px 1px 6px rgba(0, 0, 0, 0.08)', 
-                  bgcolor: 'background.paper',
-                  alignSelf: { xs: 'flex-end', sm: 'center' }
+                  bgcolor: refreshing ? 'background.default' : 'background.paper',
+                  boxShadow: refreshing ? 'none' : 1,
+                  '&:hover': {
+                    bgcolor: 'background.default'
+                  }
                 }}
               >
                 <RefreshIcon />
@@ -324,12 +257,7 @@ const StatisticsPage = () => {
             </Tooltip>
           </Box>
         </Box>
-        
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'flex-end', 
-          mt: 1 
-        }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
           <Typography 
             variant="caption" 
             color="text.secondary"
