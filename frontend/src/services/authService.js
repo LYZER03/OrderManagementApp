@@ -107,6 +107,12 @@ const authService = {
     const user = authService.getCurrentUser();
     return user && user.role === 'AGENT';
   },
+  
+  // Vérification si l'utilisateur est un super agent
+  isSuperAgent: () => {
+    const user = authService.getCurrentUser();
+    return user && user.role === 'SUPER_AGENT';
+  },
 
   // Rafraîchissement du token d'accès
   refreshToken: async () => {

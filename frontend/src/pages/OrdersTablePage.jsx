@@ -42,8 +42,8 @@ const OrdersTablePage = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
-  // Rediriger si l'utilisateur n'est pas un manager
-  if (!user || user.role !== 'MANAGER') {
+  // Rediriger si l'utilisateur n'est ni un manager ni un super agent
+  if (!user || (user.role !== 'MANAGER' && user.role !== 'SUPER_AGENT')) {
     return <Navigate to="/" replace />;
   }
 

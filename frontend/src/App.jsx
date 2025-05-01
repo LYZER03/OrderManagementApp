@@ -41,14 +41,26 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             
-            {/* Routes protégées avec layout */}
+            {/* Routes accessibles à tous les utilisateurs authentifiés */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
-                {/* Autres routes protégées seront ajoutées ici */}
+              </Route>
+            </Route>
+            
+            {/* Routes accessibles aux Agents et Super Agents */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
                 <Route path="/preparation" element={<PreparationPage />} />
                 <Route path="/control" element={<ControlPage />} />
                 <Route path="/packing" element={<PackingPage />} />
+              </Route>
+            </Route>
+            
+            {/* Routes accessibles uniquement aux Super Agents et Managers */}
+            <Route element={<ProtectedRoute requireSuperAgent={true} />}>
+              <Route element={<AppLayout />}>
+                <Route path="/orders-table" element={<OrdersTablePage />} />
               </Route>
             </Route>
             
@@ -56,18 +68,11 @@ function App() {
             <Route element={<ProtectedRoute requireManager={true} />}>
               <Route element={<AppLayout />}>
                 <Route path="/statistics" element={<StatisticsPage />} />
-
                 <Route path="/users" element={<UsersPage />} />
-                <Route path="/orders-table" element={<OrdersTablePage />} />
                 <Route path="/presta-orders" element={<PrestaOrdersPage />} />
                 <Route path="/profile" element={<div>Page de profil (à implémenter)</div>} />
                 <Route path="/settings" element={<div>Page de paramètres (à implémenter)</div>} />
               </Route>
-            </Route>
-            
-            {/* Route pour Table des Scores sans le layout principal */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/table_score" element={<TableDesScoresPage />} />
             </Route>
             
             {/* Redirection par défaut */}

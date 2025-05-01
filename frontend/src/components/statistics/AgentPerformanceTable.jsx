@@ -80,14 +80,15 @@ const AgentPerformanceTable = ({
           <TableHead>
             <TableRow>
               <TableCell sx={{ py: 1, px: 1, fontWeight: 600 }}>Agent</TableCell>
-              {/* Colonnes pour le nombre de commandes */}
-              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600 }}>Préparées</TableCell>
-              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600 }}>Contrôlées</TableCell>
-              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600 }}>Emballées</TableCell>
-              {/* Colonnes pour le nombre de lignes */}
-              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600 }}>Lignes préparées</TableCell>
-              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600 }}>Lignes contrôlées</TableCell>
-              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600 }}>Lignes emballées</TableCell>
+              {/* Colonnes pour le nombre de commandes préparées - couleur verte */}
+              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600, backgroundColor: '#e8f5e9', color: '#2e7d32', borderBottom: '2px solid #2e7d32' }}>Préparées</TableCell>
+              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600, backgroundColor: '#e8f5e9', color: '#2e7d32', borderBottom: '2px solid #2e7d32' }}>Lignes préparées</TableCell>
+              {/* Colonnes pour le nombre de commandes contrôlées - couleur orange */}
+              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600, backgroundColor: '#fff3e0', color: '#e65100', borderBottom: '2px solid #e65100' }}>Contrôlées</TableCell>
+              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600, backgroundColor: '#fff3e0', color: '#e65100', borderBottom: '2px solid #e65100' }}>Lignes contrôlées</TableCell>
+              {/* Colonnes pour le nombre de commandes emballées - couleur violette */}
+              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600, backgroundColor: '#f3e5f5', color: '#6a1b9a', borderBottom: '2px solid #6a1b9a' }}>Emballées</TableCell>
+              <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600, backgroundColor: '#f3e5f5', color: '#6a1b9a', borderBottom: '2px solid #6a1b9a' }}>Lignes emballées</TableCell>
               <TableCell align="center" sx={{ py: 1, px: 1, fontWeight: 600 }}>Total lignes</TableCell>
             </TableRow>
           </TableHead>
@@ -118,48 +119,36 @@ const AgentPerformanceTable = ({
                     </Typography>
                   </TableCell>
                   
-                  {/* Nombre de commandes */}
-                  <TableCell align="center" sx={{ py: 0.5, px: 1 }}>
-                    <Tooltip title="Commandes préparées">
-                      <Chip 
-                        size="small" 
-                        label={row.preparedOrders || 0}
-                        color={getPerformanceColor(row.preparedOrders || 0, maxOrders)}
-                      />
-                    </Tooltip>
+                  {/* Nombre de commandes préparées - fond léger vert */}
+                  <TableCell align="center" sx={{ py: 0.5, px: 1, backgroundColor: row.preparedOrders > 0 ? 'rgba(46, 125, 50, 0.04)' : 'transparent' }}>
+                    <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 500 }}>
+                      {row.preparedOrders || 0}
+                    </Typography>
                   </TableCell>
-                  <TableCell align="center" sx={{ py: 0.5, px: 1 }}>
-                    <Tooltip title="Commandes contrôlées">
-                      <Chip 
-                        size="small" 
-                        label={row.controlledOrders || 0}
-                        color={getPerformanceColor(row.controlledOrders || 0, maxOrders)}
-                      />
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell align="center" sx={{ py: 0.5, px: 1 }}>
-                    <Tooltip title="Commandes emballées">
-                      <Chip 
-                        size="small" 
-                        label={row.packedOrders || 0}
-                        color={getPerformanceColor(row.packedOrders || 0, maxOrders)}
-                      />
-                    </Tooltip>
-                  </TableCell>
-                  
-                  {/* Nombre de lignes */}
-                  <TableCell align="center" sx={{ py: 0.5, px: 1 }}>
-                    <Typography variant="body2">
+                  <TableCell align="center" sx={{ py: 0.5, px: 1, backgroundColor: preparedLines > 0 ? 'rgba(46, 125, 50, 0.04)' : 'transparent' }}>
+                    <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 500 }}>
                       {preparedLines}
                     </Typography>
                   </TableCell>
-                  <TableCell align="center" sx={{ py: 0.5, px: 1 }}>
-                    <Typography variant="body2">
+                  {/* Nombre de commandes contrôlées - fond léger orange */}
+                  <TableCell align="center" sx={{ py: 0.5, px: 1, backgroundColor: row.controlledOrders > 0 ? 'rgba(230, 81, 0, 0.04)' : 'transparent' }}>
+                    <Typography variant="body2" sx={{ color: '#e65100', fontWeight: 500 }}>
+                      {row.controlledOrders || 0}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center" sx={{ py: 0.5, px: 1, backgroundColor: controlledLines > 0 ? 'rgba(230, 81, 0, 0.04)' : 'transparent' }}>
+                    <Typography variant="body2" sx={{ color: '#e65100', fontWeight: 500 }}>
                       {controlledLines}
                     </Typography>
                   </TableCell>
-                  <TableCell align="center" sx={{ py: 0.5, px: 1 }}>
-                    <Typography variant="body2">
+                  {/* Nombre de commandes emballées - fond léger violet */}
+                  <TableCell align="center" sx={{ py: 0.5, px: 1, backgroundColor: row.packedOrders > 0 ? 'rgba(106, 27, 154, 0.04)' : 'transparent' }}>
+                    <Typography variant="body2" sx={{ color: '#6a1b9a', fontWeight: 500 }}>
+                      {row.packedOrders || 0}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center" sx={{ py: 0.5, px: 1, backgroundColor: packedLines > 0 ? 'rgba(106, 27, 154, 0.04)' : 'transparent' }}>
+                    <Typography variant="body2" sx={{ color: '#6a1b9a', fontWeight: 500 }}>
                       {packedLines}
                     </Typography>
                   </TableCell>

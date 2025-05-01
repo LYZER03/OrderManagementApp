@@ -4,8 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Box, CircularProgress } from '@mui/material';
 
 // Composant pour les routes qui nécessitent une authentification
-const ProtectedRoute = ({ requireManager = false }) => {
-  const { isAuthenticated, isManager, loading, user } = useAuth();
+const ProtectedRoute = ({ requireManager = false, requireSuperAgent = false }) => {
+  const { isAuthenticated, isManager, isSuperAgent, loading, user } = useAuth();
   
   // Afficher un indicateur de chargement pendant la vérification de l'authentification
   if (loading) {
@@ -21,8 +21,13 @@ const ProtectedRoute = ({ requireManager = false }) => {
     return <Navigate to="/login" replace />;
   }
   
-  // Vérifier si la route nécessite un rôle de manager
+  // Vérifier si la route nécessite un rôle spécifique
   if (requireManager && !isManager()) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  // Vérifier pour les routes accessibles aux Super Agents et Managers
+  if (requireSuperAgent && !(isSuperAgent() || isManager())) {
     return <Navigate to="/unauthorized" replace />;
   }
   

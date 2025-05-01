@@ -43,7 +43,7 @@ class OrderListCreateView(APIView):
         end_datetime = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.min.time()))
         
         # Préparer la requête de base
-        if request.user.is_manager():
+        if request.user.is_manager() or request.user.is_super_agent():
             query = Order.objects.all()
         else:
             # Agents can see orders they created, prepared, controlled, or packed
@@ -83,7 +83,7 @@ class OrderDetailView(APIView):
         order = self.get_order(pk)
         
         # Check if user has permission to view this order
-        if not request.user.is_manager() and request.user != order.creator:
+        if not (request.user.is_manager() or request.user.is_super_agent()) and request.user != order.creator:
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         serializer = OrderSerializer(order)
@@ -93,7 +93,7 @@ class OrderDetailView(APIView):
         order = self.get_order(pk)
         
         # Check if user has permission to update this order
-        if not request.user.is_manager() and request.user != order.creator:
+        if not (request.user.is_manager() or request.user.is_super_agent()) and request.user != order.creator:
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         serializer = OrderUpdateSerializer(order, data=request.data, partial=True)
@@ -105,8 +105,8 @@ class OrderDetailView(APIView):
     def delete(self, request, pk):
         order = self.get_order(pk)
         
-        # Only managers or the creator can delete an order
-        if not request.user.is_manager() and request.user != order.creator:
+        # Only managers, super agents, or the creator can delete an order
+        if not (request.user.is_manager() or request.user.is_super_agent()) and request.user != order.creator:
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         order.delete()

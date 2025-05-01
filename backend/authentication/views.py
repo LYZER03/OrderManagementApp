@@ -56,8 +56,8 @@ class UserListView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     
     def get(self, request):
-        # Only managers can see the list of users
-        if not request.user.is_manager():
+        # Only managers and super agents can see the list of users
+        if not (request.user.is_manager() or request.user.is_super_agent()):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         users = User.objects.all().order_by('username')
@@ -66,7 +66,7 @@ class UserListView(APIView):
     
     def post(self, request):
         # Only managers can create users
-        if not request.user.is_manager():
+        if not (request.user.is_manager() or request.user.is_super_agent()):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         serializer = RegisterSerializer(data=request.data)
@@ -83,8 +83,8 @@ class UserDetailView(APIView):
         return get_object_or_404(User, pk=pk)
     
     def get(self, request, pk):
-        # Only managers can view user details
-        if not request.user.is_manager():
+        # Only managers and super agents can view user details
+        if not (request.user.is_manager() or request.user.is_super_agent()):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         user = self.get_object(pk)
@@ -92,8 +92,8 @@ class UserDetailView(APIView):
         return Response(serializer.data)
     
     def put(self, request, pk):
-        # Only managers can update users
-        if not request.user.is_manager():
+        # Only managers and super agents can update users
+        if not (request.user.is_manager() or request.user.is_super_agent()):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         user = self.get_object(pk)
@@ -112,8 +112,8 @@ class UserDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk):
-        # Only managers can delete users
-        if not request.user.is_manager():
+        # Only managers and super agents can delete users
+        if not (request.user.is_manager() or request.user.is_super_agent()):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         # Prevent self-deletion
@@ -129,8 +129,8 @@ class UserRoleView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     
     def patch(self, request, pk):
-        # Only managers can change roles
-        if not request.user.is_manager():
+        # Only managers and super agents can change roles
+        if not (request.user.is_manager() or request.user.is_super_agent()):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         user = get_object_or_404(User, pk=pk)
@@ -154,15 +154,15 @@ class UserPasswordResetView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     
     def post(self, request, pk):
-        # Only managers can reset passwords
-        if not request.user.is_manager():
+        # Only managers and super agents can reset passwords
+        if not (request.user.is_manager() or request.user.is_super_agent()):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         
         user = get_object_or_404(User, pk=pk)
         password = request.data.get('password')
         
-        if not password or len(password) < 8:
-            return Response({"error": "Le mot de passe doit contenir au moins 8 caractères"}, status=status.HTTP_400_BAD_REQUEST)
+        if not password or len(password) < 1:
+            return Response({"error": "Le mot de passe est requis"}, status=status.HTTP_400_BAD_REQUEST)
         
         user.password = make_password(password)
         user.save()

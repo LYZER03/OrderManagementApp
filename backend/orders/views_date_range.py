@@ -82,7 +82,7 @@ class OrderListCreateView(APIView):
         if date_param == 'all':
             print("Paramètre 'all' détecté: aucun filtrage par date ne sera appliqué")
             # Préparer la requête sans filtre de date
-            if request.user.is_manager():
+            if request.user.is_manager() or request.user.is_super_agent():
                 query = Order.objects.all()
                 
                 # Filtrer par créateur si spécifié
@@ -102,7 +102,7 @@ class OrderListCreateView(APIView):
             end_datetime = timezone.make_aware(timezone.datetime.combine(end_date, timezone.datetime.min.time()))
             
             # Filtrer les commandes par date de création
-            if request.user.is_manager():
+            if request.user.is_manager() or request.user.is_super_agent():
                 query = Order.objects.filter(
                     created_at__gte=start_datetime,
                     created_at__lt=end_datetime

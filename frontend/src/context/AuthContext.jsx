@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
             const currentUser = authService.getCurrentUser();
             
             // Vérifier que l'utilisateur a un rôle valide
-            if (currentUser && (currentUser.role === 'AGENT' || currentUser.role === 'MANAGER')) {
+            if (currentUser && (currentUser.role === 'AGENT' || currentUser.role === 'SUPER_AGENT' || currentUser.role === 'MANAGER')) {
               setUser(currentUser);
             } else {
               console.warn('Utilisateur sans rôle valide, déconnexion');
@@ -100,7 +100,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: authService.isAuthenticated,
     isManager: authService.isManager,
-    isAgent: authService.isAgent
+    isAgent: authService.isAgent,
+    isSuperAgent: authService.isSuperAgent
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -53,7 +53,7 @@ const collapsedDrawerWidth = 64;
 
 const AppLayout = () => {
   const theme = useTheme();
-  const { user, logout, isManager } = useAuth();
+  const { user, logout, isManager, isSuperAgent } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -77,31 +77,31 @@ const AppLayout = () => {
       text: 'MENU',
       icon: <DashboardIcon />,
       path: '/dashboard',
-      roles: ['AGENT', 'MANAGER']
+      roles: ['AGENT', 'SUPER_AGENT', 'MANAGER']
     },
     {
       text: 'Préparation',
       icon: <InventoryIcon />,
       path: '/preparation',
-      roles: ['AGENT', 'MANAGER']
+      roles: ['AGENT', 'SUPER_AGENT', 'MANAGER']
     },
     {
       text: 'Contrôle',
       icon: <CheckCircleIcon />,
       path: '/control',
-      roles: ['AGENT', 'MANAGER']
+      roles: ['AGENT', 'SUPER_AGENT', 'MANAGER']
     },
     {
       text: 'Emballage',
       icon: <LocalShippingIcon />,
       path: '/packing',
-      roles: ['AGENT', 'MANAGER']
+      roles: ['AGENT', 'SUPER_AGENT', 'MANAGER']
     },
     {
       text: 'Table des commandes',
       icon: <TableViewIcon />,
       path: '/orders-table',
-      roles: ['MANAGER']
+      roles: ['SUPER_AGENT', 'MANAGER']
     },
     {
       text: 'Statistiques',
@@ -118,7 +118,6 @@ const AppLayout = () => {
     {
       text: 'Commandes PrestaShop',
       icon: <img src={prestaLogo} alt="PrestaShop" style={{ width: 24, height: 24, objectFit: 'contain', marginRight: 2 }} />,
-
       path: '/presta-orders',
       roles: ['MANAGER']
     },
@@ -131,9 +130,17 @@ const AppLayout = () => {
   ];
 
   // Filtrer les éléments du menu en fonction du rôle de l'utilisateur
-  const filteredMenuItems = menuItems.filter(item => 
-    item.roles.includes(user?.role)
-  );
+  const filteredMenuItems = menuItems.filter(item => {
+    // Afficher les items pour le rôle spécifique de l'utilisateur
+    if (item.roles.includes(user?.role)) {
+      return true;
+    }
+    // Les Super Agents doivent aussi voir les items marqués pour AGENT
+    if (user?.role === 'SUPER_AGENT' && item.roles.includes('AGENT')) {
+      return true;
+    }
+    return false;
+  });
 
   const toggleDrawer = () => {
     setDrawerExpanded(!drawerExpanded);
@@ -258,38 +265,13 @@ const AppLayout = () => {
         ))}
       </List>
       
-      {/* Settings button at bottom */}
+      {/* Bottom of menu */}
       <Box sx={{ 
         borderTop: '1px solid #EEEEEE',
         display: 'flex',
         justifyContent: drawerExpanded ? 'flex-start' : 'center'
       }}>
-        <ListItemButton
-          onClick={() => navigate('/settings')}
-          sx={{
-            borderRadius: 0,
-            p: 1.5,
-            minWidth: drawerExpanded ? 'auto' : 40,
-            display: 'flex',
-            justifyContent: drawerExpanded ? 'flex-start' : 'center'
-          }}
-        >
-          <ListItemIcon sx={{ 
-            minWidth: drawerExpanded ? 40 : 24,
-            color: location.pathname === '/settings' ? theme.palette.primary.main : 'inherit'
-          }}>
-            <SettingsIcon />
-          </ListItemIcon>
-          {drawerExpanded && (
-            <ListItemText 
-              primary="Paramètres" 
-              primaryTypographyProps={{
-                fontSize: 14,
-                fontWeight: location.pathname === '/settings' ? 600 : 400,
-              }}
-            />
-          )}
-        </ListItemButton>
+        {/* Logout button will be placed here */}
       </Box>
       
       {/* Logout button */}

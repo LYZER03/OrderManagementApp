@@ -213,73 +213,72 @@ const TableDesScoresPage = () => {
       justifyContent: 'flex-start',
       overflowX: 'hidden'
     }}>
-      <Box sx={{ width: '100%', maxWidth: 1400, mb: 2, mt: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, position: 'relative' }}>
+      <Box sx={{ width: '100%', maxWidth: 1400, mb: 1, mt: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1, position: 'relative' }}>
           <IconButton onClick={() => navigate(-1)} sx={{ position: 'absolute', left: 0 }}>
             <ArrowBackIcon fontSize="large" />
           </IconButton>
-          <img src={gfcLogo} alt="Logo" style={{ height: '80px', marginRight: '24px' }} />
+          <img src={gfcLogo} alt="Logo" style={{ height: '60px', marginRight: '16px' }} />
 
         </Box>
-        <Typography variant="h6" align="center" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography variant="h6" align="center" color="text.secondary" sx={{ mb: 1 }}>
           Commandes traitées aujourd'hui par agent
         </Typography>
-        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 2 }}>
           Dernière mise à jour : {new Date().toLocaleTimeString('fr-FR')}
         </Typography>
       </Box>
 
       {userScores.length === 0 ? (
-        <Paper sx={{ p: 3, mb: 3, textAlign: 'center' }}>
+        <Paper sx={{ p: 2, mb: 2, textAlign: 'center' }}>
           <Typography variant="h6" color="text.secondary">
             Aucun utilisateur trouvé. Veuillez vérifier les données.
           </Typography>
         </Paper>
       ) : null}
 
-      <Grid container spacing={{ xs: 2, md: 3 }} justifyContent="center" alignItems="stretch" sx={{ width: '100%', maxWidth: 1400, mb: 4 }}>
+      <Grid container spacing={{ xs: 1, md: 2 }} justifyContent="center" alignItems="stretch" sx={{ width: '100%', maxWidth: 1400, mb: 3 }}>
         {userScores.map((user, idx) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={user.id} style={{ display: 'flex' }}>
+          <Grid item xs={6} sm={4} md={3} lg={2} key={user.id} style={{ display: 'flex' }}>
             <Paper
-              elevation={4}
+              elevation={3}
               sx={{
                 width: '100%',
-                minHeight: 220,
-                borderRadius: 3,
+                minHeight: 160, // Réduit la hauteur minimale
+                borderRadius: 2, // Réduit légèrement le rayon de bordure
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                p: 2.5,
+                p: 1.5, // Réduit le padding
                 position: 'relative',
-                boxShadow: '0 2px 8px 0 #e0e0e0',
-                border: '1.5px solid #e0e0e0',
+                boxShadow: '0 1px 4px 0 #e0e0e0', // Ombre plus légère
+                border: '1px solid #e0e0e0', // Bordure plus fine
                 background: '#fff',
-                mt: idx < 3 ? 0 : 1,
+                mt: idx < 3 ? 0 : 0.5, // Espacement réduit
                 flex: 1
               }}
             >
-
               {/* Nom et prénom */}
-              <Typography variant="h6" sx={{ mt: 2, fontWeight: 700, textAlign: 'center', mb: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, textAlign: 'center', mb: 0.5 }}>
                 {user.username}
               </Typography>
               {/* Score total */}
-              <Typography variant="h2" sx={{ color: '#51158C', fontWeight: 900, mb: 1, mt: 0.5, textShadow: '0 2px 8px #e0e0e0' }}>
+              <Typography variant="h3" sx={{ color: '#51158C', fontWeight: 800, mb: 0.5, mt: 0, textShadow: '0 1px 4px #e0e0e0' }}>
                 {user.total}
               </Typography>
               {/* Détail par type avec badges */}
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: '#27AE60', mr: 0.5 }} />
-                  <Typography variant="h6" sx={{ color: '#27AE60', fontWeight: 700 }}>{user.prepared}</Typography>
+              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#27AE60', mr: 0.25 }} />
+                  <Typography variant="body2" sx={{ color: '#27AE60', fontWeight: 700 }}>{user.prepared}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: '#F39C12', mr: 0.5 }} />
-                  <Typography variant="h6" sx={{ color: '#F39C12', fontWeight: 700 }}>{user.controlled}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#F39C12', mr: 0.25 }} />
+                  <Typography variant="body2" sx={{ color: '#F39C12', fontWeight: 700 }}>{user.controlled}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: '#8E44AD', mr: 0.5 }} />
-                  <Typography variant="h6" sx={{ color: '#8E44AD', fontWeight: 700 }}>{user.packed}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#8E44AD', mr: 0.25 }} />
+                  <Typography variant="body2" sx={{ color: '#8E44AD', fontWeight: 700 }}>{user.packed}</Typography>
                 </Box>
               </Box>
             </Paper>
@@ -288,18 +287,18 @@ const TableDesScoresPage = () => {
       </Grid>
 
       {/* Légende compacte */}
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: '#27AE60', mr: 1 }} />
-          <Typography variant="body1" sx={{ color: '#27AE60', fontWeight: 600 }}>Préparé</Typography>
+      <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#27AE60', mr: 0.5 }} />
+          <Typography variant="body2" sx={{ color: '#27AE60', fontWeight: 600 }}>Préparé</Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: '#F39C12', mr: 1 }} />
-          <Typography variant="body1" sx={{ color: '#F39C12', fontWeight: 600 }}>Contrôlé</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#F39C12', mr: 0.5 }} />
+          <Typography variant="body2" sx={{ color: '#F39C12', fontWeight: 600 }}>Contrôlé</Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: '#8E44AD', mr: 1 }} />
-          <Typography variant="body1" sx={{ color: '#8E44AD', fontWeight: 600 }}>Emballé</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#8E44AD', mr: 0.5 }} />
+          <Typography variant="body2" sx={{ color: '#8E44AD', fontWeight: 600 }}>Emballé</Typography>
         </Box>
       </Box>
     </Box>

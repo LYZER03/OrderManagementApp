@@ -13,8 +13,16 @@ import {
   Tooltip,
   IconButton,
   ToggleButtonGroup,
-  ToggleButton
+  ToggleButton,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import frLocale from 'date-fns/locale/fr';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
@@ -29,6 +37,8 @@ import RecentOrdersTable from '../components/statistics/RecentOrdersTable';
 
 // Service de statistiques
 import statsService from '../services/statsService';
+import authService from '../services/authService';
+import userService from '../services/userService';
 
 // Icônes
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -61,8 +71,15 @@ const StatisticsPage = () => {
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [refreshCounter, setRefreshCounter] = useState(0); // Compteur pour forcer le rafraîchissement des composants
   
-  // État pour le filtre de période
-  const [periodFilter, setPeriodFilter] = useState('today'); // 'today', 'week', 'month'
+  // États pour les filtres
+  const [periodFilter, setPeriodFilter] = useState('today'); // 'today', 'week', 'month', 'custom'
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [agents, setAgents] = useState([]);
+  const [selectedAgent, setSelectedAgent] = useState('');
+  const [filteredAgentPerformance, setFilteredAgentPerformance] = useState([]);
+  
+  console.log('Current selected agent:', selectedAgent);
 
   // Rediriger si l'utilisateur n'est pas un manager
   if (!user || user.role !== 'MANAGER') {
@@ -80,12 +97,20 @@ const StatisticsPage = () => {
       setLoading(true);
     }
     setError('');
-      
+    
     try {
       console.log(`Chargement des statistiques pour la période ${currentPeriod}...`);
+      if (currentPeriod === 'custom') {
+        console.log(`Dates personnalisées: ${startDate.toISOString().split('T')[0]} au ${endDate.toISOString().split('T')[0]}`);
+      }
+      
+      // Préparer les paramètres pour les appels API
+      const params = currentPeriod === 'custom' 
+        ? [currentPeriod, startDate, endDate] 
+        : [currentPeriod];
       
       // Charger d'abord les statistiques générales pour vérifier la connexion
-      const generalStatsData = await statsService.getGeneralStats(currentPeriod);
+      const generalStatsData = await statsService.getGeneralStats(...params);
       console.log('Statistiques générales chargées:', generalStatsData);
       
       // Puis charger le reste des données
@@ -97,12 +122,12 @@ const StatisticsPage = () => {
         completedTasksData,
         recentOrdersData
       ] = await Promise.all([
-        statsService.getOrdersByStatus(currentPeriod),
+        statsService.getOrdersByStatus(...params),
         statsService.getProcessingTimeByStep(),
-        statsService.getAgentPerformance(currentPeriod),
-        statsService.getDailySales(currentPeriod),
-        statsService.getCompletedTasks(currentPeriod),
-        statsService.getRecentOrders(currentPeriod)
+        statsService.getAgentPerformance(...params),
+        statsService.getDailySales(...params),
+        statsService.getCompletedTasks(...params),
+        statsService.getRecentOrders(...params)
       ]);
       
       // Mettre à jour les états avec les données récupérées
@@ -165,6 +190,45 @@ const StatisticsPage = () => {
       });
   };
   
+  // Fonction pour filtrer la table des performances par agent
+  useEffect(() => {
+    console.log('Filtering agent performance', { selectedAgent, performanceLength: agentPerformance.length });
+    
+    if (agentPerformance.length > 0) {
+      // Déboguer les données d'agents disponibles
+      console.log('Available agents in performance data:', agentPerformance.map(agent => ({ 
+        id: agent.id, 
+        name: agent.name
+      })));
+      
+      if (selectedAgent && selectedAgent !== '') {
+        console.log('Filtering by agent ID:', selectedAgent);
+        const filtered = agentPerformance.filter(agent => agent.id === parseInt(selectedAgent));
+        console.log('Filtered results:', filtered);
+        setFilteredAgentPerformance(filtered);
+      } else {
+        console.log('No agent filter, showing all agents');
+        setFilteredAgentPerformance([...agentPerformance]);
+      }
+    } else {
+      // Si agentPerformance est vide, filteredAgentPerformance doit aussi être vide
+      setFilteredAgentPerformance([]);
+    }
+  }, [agentPerformance, selectedAgent]);
+  
+  // Charger la liste des agents
+  useEffect(() => {
+    const getAgents = async () => {
+      try {
+        const agentsData = await userService.getAllAgents();
+        setAgents(agentsData);
+      } catch (error) {
+        console.error('Erreur lors du chargement des agents', error);
+      }
+    };
+    getAgents();
+  }, []);
+
   // Charger les données au premier rendu
   useEffect(() => {
     console.log(`Chargement initial des statistiques pour la période: ${periodFilter}`);
@@ -178,7 +242,7 @@ const StatisticsPage = () => {
     
     // Nettoyer l'intervalle lorsque le composant est démonté
     return () => clearInterval(autoRefreshInterval);
-  }, [periodFilter]); // Re-exécuter l'effet lorsque periodFilter change
+  }, [periodFilter, startDate, endDate]); // Re-exécuter l'effet lorsque les filtres changent
 
   // Afficher un indicateur de chargement
   if (loading) {
@@ -208,37 +272,59 @@ const StatisticsPage = () => {
             Tableau de bord statistiques
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <ToggleButtonGroup
-              value={periodFilter}
-              exclusive
-              onChange={(e, newPeriod) => {
-                if (newPeriod !== null) {
-                  handlePeriodChange(newPeriod);
-                }
-              }}
-              aria-label="filtre de période"
-              size="small"
-              sx={{ 
-                backgroundColor: 'background.paper',
-                boxShadow: 1,
-                borderRadius: 1,
-                '& .MuiToggleButton-root': {
-                  textTransform: 'none',
-                  fontSize: '0.75rem',
-                  fontWeight: 'medium'
-                }
-              }}
-            >
-              <ToggleButton value="today" aria-label="aujourd'hui">
-                Aujourd'hui
-              </ToggleButton>
-              <ToggleButton value="week" aria-label="7 jours">
-                7 jours
-              </ToggleButton>
-              <ToggleButton value="month" aria-label="1 mois">
-                1 mois
-              </ToggleButton>
-            </ToggleButtonGroup>
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={frLocale}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <DatePicker
+                  label="Date de début"
+                  value={startDate}
+                  onChange={(newDate) => {
+                    setStartDate(newDate);
+                    if (periodFilter !== 'custom') {
+                      setPeriodFilter('custom');
+                    }
+                  }}
+                  format="dd/MM/yyyy"
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      sx: { width: 150 }
+                    }
+                  }}
+                />
+                <DatePicker
+                  label="Date de fin"
+                  value={endDate}
+                  onChange={(newDate) => {
+                    setEndDate(newDate);
+                    if (periodFilter !== 'custom') {
+                      setPeriodFilter('custom');
+                    }
+                  }}
+                  format="dd/MM/yyyy"
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      sx: { width: 150 }
+                    }
+                  }}
+                />
+                <Button 
+                  variant="contained" 
+                  size="small"
+                  onClick={() => {
+                    // Réinitialiser les dates à aujourd'hui
+                    setStartDate(new Date());
+                    setEndDate(new Date());
+                    setPeriodFilter('today');
+                    fetchStats('today', true);
+                  }}
+                  color="secondary"
+                  sx={{ minWidth: 110 }}
+                >
+                  Aujourd'hui
+                </Button>
+              </Box>
+            </LocalizationProvider>
 
             <Tooltip title="Rafraîchir les données">
               <IconButton 
@@ -392,12 +478,49 @@ const StatisticsPage = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Suivi détaillé des commandes et lignes traitées par chaque agent
           </Typography>
-          <AgentPerformanceTable 
-            data={agentPerformance}
-            noTitle={true}
-            lastUpdated={`Dernière mise à jour: ${lastRefreshed.toLocaleTimeString()}`}
-            key={`agent-performance-${refreshCounter}`} // Forcer le remontage du composant à chaque rafraîchissement
-          />
+          <Box sx={{ mb: 3 }}>
+            <FormControl sx={{ width: 200, mb: 2 }}>
+              <InputLabel id="agent-filter-label">Filtrer par agent</InputLabel>
+              <Select
+                labelId="agent-filter-label"
+                id="agent-filter"
+                value={selectedAgent}
+                onChange={(e) => setSelectedAgent(e.target.value)}
+                label="Filtrer par agent"
+                size="small"
+              >
+                <MenuItem value="">Tous les agents</MenuItem>
+                {agents.map((agent) => {
+                  const fullName = `${agent.first_name} ${agent.last_name}`;
+                  console.log('Agent menu item:', { id: agent.id, fullName });
+                  return (
+                    <MenuItem key={agent.id} value={agent.id}>
+                      {fullName}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          </Box>
+          {/* Ajouter un log de débogage pour vérifier les données */}
+          {console.log('Rendering table', { 
+            filteredLength: filteredAgentPerformance.length, 
+            originalLength: agentPerformance.length,
+            selectedAgent
+          })}
+          
+          {selectedAgent && filteredAgentPerformance.length === 0 ? (
+            <Typography variant="body1" sx={{ py: 4, textAlign: 'center' }}>
+              Aucune activité pour cet agent dans la période sélectionnée.
+            </Typography>
+          ) : (
+            <AgentPerformanceTable 
+              data={selectedAgent ? filteredAgentPerformance : agentPerformance}
+              noTitle={true}
+              lastUpdated={`Dernière mise à jour: ${lastRefreshed.toLocaleTimeString()}`}
+              key={`agent-performance-${refreshCounter}-${selectedAgent}`} // Forcer le remontage du composant à chaque filtrage
+            />
+          )}
         </Paper>
       </Box>
         

@@ -88,17 +88,15 @@ const UserForm = ({
       errors.username = "Le nom d'utilisateur est requis";
     }
     
-    if (!formData.email.trim()) {
-      errors.email = "L'email est requis";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = "Format d'email invalide";
     }
     
     if (!isEditMode) {
       if (!formData.password) {
         errors.password = "Le mot de passe est requis";
-      } else if (formData.password.length < 8) {
-        errors.password = "Le mot de passe doit contenir au moins 8 caractères";
+      } else if (formData.password.length < 1) {
+        errors.password = "Le mot de passe est requis";
       }
       
       if (formData.password !== formData.password_confirm) {
@@ -106,8 +104,8 @@ const UserForm = ({
       }
     } else if (formData.password && formData.password.length > 0) {
       // En mode édition, vérifier le mot de passe seulement s'il est fourni
-      if (formData.password.length < 8) {
-        errors.password = "Le mot de passe doit contenir au moins 8 caractères";
+      if (formData.password.length < 1) {
+        errors.password = "Le mot de passe est requis";
       }
       
       if (formData.password !== formData.password_confirm) {
@@ -217,7 +215,6 @@ const UserForm = ({
             <Grid item xs={12}>
               <TextField
                 margin="normal"
-                required
                 fullWidth
                 id="email"
                 label="Email"
@@ -244,6 +241,7 @@ const UserForm = ({
                   disabled={loading}
                 >
                   <MenuItem value="AGENT">Agent</MenuItem>
+                  <MenuItem value="SUPER_AGENT">Super Agent</MenuItem>
                   <MenuItem value="MANAGER">Manager</MenuItem>
                 </Select>
               </FormControl>

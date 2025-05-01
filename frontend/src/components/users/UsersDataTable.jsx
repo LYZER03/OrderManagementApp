@@ -122,13 +122,16 @@ const UsersDataTable = ({
       case 'MANAGER':
         color = 'secondary';
         break;
+      case 'SUPER_AGENT':
+        color = 'warning';
+        break;
       default:
         break;
     }
     
     return (
       <Chip 
-        label={role === 'AGENT' ? 'Agent' : 'Manager'} 
+        label={role === 'AGENT' ? 'Agent' : role === 'MANAGER' ? 'Manager' : 'Super Agent'} 
         color={color} 
         size="small" 
         sx={{ fontWeight: 600 }} 
@@ -200,7 +203,6 @@ const UsersDataTable = ({
                     <TableCell>Nom d'utilisateur</TableCell>
                     <TableCell>Nom</TableCell>
                     <TableCell>Prénom</TableCell>
-                    <TableCell>Email</TableCell>
                     <TableCell>Rôle</TableCell>
                     <TableCell align="center">Actions</TableCell>
                   </TableRow>
@@ -221,7 +223,6 @@ const UsersDataTable = ({
                         </TableCell>
                         <TableCell>{user.last_name}</TableCell>
                         <TableCell>{user.first_name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
                         <TableCell>{getRoleChip(user.role)}</TableCell>
                         <TableCell align="center">
                           <Stack direction="row" spacing={1} justifyContent="center">

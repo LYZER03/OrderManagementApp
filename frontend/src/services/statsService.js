@@ -18,15 +18,21 @@ const getAuthHeaders = () => {
 
 const statsService = {
   // Récupérer les statistiques générales
-  getGeneralStats: async (date = 'today') => {
+  getGeneralStats: async (date = 'today', customStartDate = null, customEndDate = null) => {
     try {
-      // Forcer date à être une chaîne valide
-      const dateParam = String(date || 'today');
-      console.log(`getGeneralStats - Période demandée: [${dateParam}]`);
-      console.log('URL dashboard:', `${API_BASE}/orders/dashboard/?date=${dateParam}`);
+      let apiUrl = `${API_BASE}/orders/dashboard/?`;
+      
+      // Gestion des différents types de filtres de date
+      if (date === 'custom' && customStartDate && customEndDate) {
+        apiUrl += `start_date=${customStartDate.toISOString().split('T')[0]}&end_date=${customEndDate.toISOString().split('T')[0]}`;
+      } else {
+        apiUrl += `date=${date}`;
+      }
+      
+      console.log(`getGeneralStats - URL: ${apiUrl}`);
       console.log('Headers:', getAuthHeaders());
       
-      const response = await axios.get(`${API_BASE}/orders/dashboard/?date=${dateParam}`, getAuthHeaders());
+      const response = await axios.get(apiUrl, getAuthHeaders());
       console.log('Réponse dashboard:', response.data);
       
       const data = response.data;
@@ -50,13 +56,20 @@ const statsService = {
   },
 
   // Récupérer les statistiques par statut de commande
-  getOrdersByStatus: async (date = 'today') => {
-    // Forcer date à être une chaîne valide
-    const dateParam = String(date || 'today');
-    console.log(`getOrdersByStatus - Période demandée: [${dateParam}]`);
+  getOrdersByStatus: async (date = 'today', customStartDate = null, customEndDate = null) => {
     try {
+      let apiUrl = `${API_BASE}/orders/?`;
+      
+      // Gestion des différents types de filtres de date
+      if (date === 'custom' && customStartDate && customEndDate) {
+        apiUrl += `start_date=${customStartDate.toISOString().split('T')[0]}&end_date=${customEndDate.toISOString().split('T')[0]}`;
+      } else {
+        apiUrl += `date=${date}`;
+      }
+
+      console.log(`getOrdersByStatus - URL: ${apiUrl}`);
       // Récupérer toutes les commandes pour pouvoir les compter par statut
-      const response = await axios.get(`${API_BASE}/orders/?date=${dateParam}`, getAuthHeaders());
+      const response = await axios.get(apiUrl, getAuthHeaders());
       const orders = response.data;
       
       console.log(`Récupération de ${orders.length} commandes pour analyse des statuts`);
@@ -156,6 +169,43 @@ const statsService = {
           rating: Math.min(5, Math.round(rating * 10) / 10)
         };
       });
+      
+      // Log des commandes pour débogage
+      console.log('Données de commandes pour débogage:');
+      orders.slice(0, 3).forEach(order => {
+        console.log(`Commande #${order.id} (${order.reference}) - Statut: ${order.status}`);
+        console.log(` Préparateur: ${order.preparer_details?.username || 'N/A'} (ID: ${order.preparer || 'N/A'})`);
+        console.log(` Contrôleur: ${order.controller_details?.username || 'N/A'} (ID: ${order.controller || 'N/A'})`);
+        console.log(` Emballeur: ${order.packer_details?.username || 'N/A'} (ID: ${order.packer || 'N/A'})`);
+      });
+      
+      // Log des performances calculées pour débogage
+      console.log('Performances calculées:');
+      Object.values(agentsMap).slice(0, 3).forEach(agent => {
+        console.log(`Agent: ${agent.name} (ID: ${agent.id})`);
+        console.log(` Commandes préparées: ${agent.preparedOrders}`);
+        console.log(` Commandes contrôlées: ${agent.controlledOrders}`);
+        console.log(` Commandes emballées: ${agent.packedOrders}`);
+      });
+      
+      // Convertir le map en tableau et trier par nombre total de commandes traitées (décroissant)
+      const agentPerformance = Object.values(agentsMap)
+        .filter(agent => {
+          // Garder uniquement les agents qui ont effectivement traité des commandes
+          return agent.preparedOrders > 0 || agent.controlledOrders > 0 || agent.packedOrders > 0;
+        })
+        .map(agent => ({
+          ...agent,
+          // Ajouter une propriété calculée pour le tri
+          totalOrders: agent.preparedOrders + agent.controlledOrders + agent.packedOrders
+        }))
+        .sort((a, b) => b.totalOrders - a.totalOrders)
+        .map(({ totalOrders, ...agent }) => agent); // Supprimer la propriété temporaire totalOrders
+      
+      console.log(`Performances réelles générées pour ${agentPerformance.length} agents actifs`);
+      
+      // Si aucun agent n'a été trouvé, retourner un tableau vide plutôt que des données fictives
+      return agentPerformance;
     } catch (error) {
       console.error('Erreur lors de la récupération des performances des agents', error);
       throw error;
@@ -163,14 +213,25 @@ const statsService = {
   },
 
   // Récupérer les statistiques du nombre de commandes par jour
-  getDailySales: async (date = 'today') => {
-    // Forcer date à être une chaîne valide
-    const dateParam = String(date || 'today');
-    console.log(`getDailySales - Période demandée: [${dateParam}]`);
+  getDailySales: async (date = 'today', customStartDate = null, customEndDate = null) => {
+    console.log(`getDailySales - Période demandée: [${date}]`);
+    if (date === 'custom' && customStartDate && customEndDate) {
+      console.log(`Dates personnalisées: ${customStartDate.toISOString().split('T')[0]} au ${customEndDate.toISOString().split('T')[0]}`);
+    }
     try {
       // Récupérer toutes les commandes avec le filtre de période spécifié
-      const response = await axios.get(`${API_BASE}/orders/?date=${dateParam}`, getAuthHeaders());
-      console.log(`URL avec filtrage de période: ${API_BASE}/orders/?date=${dateParam}`);
+      let apiUrl = `${API_BASE}/orders/?`;
+      
+      // Gestion des différents types de filtres de date
+      if (date === 'custom' && customStartDate && customEndDate) {
+        apiUrl += `start_date=${customStartDate.toISOString().split('T')[0]}&end_date=${customEndDate.toISOString().split('T')[0]}`;
+      } else {
+        apiUrl += `date=${date}`;
+      }
+      
+      console.log(`getDailySales - URL: ${apiUrl}`);
+      const response = await axios.get(apiUrl, getAuthHeaders());
+      console.log(`URL avec filtrage de période: ${apiUrl}`);
       const orders = response.data;
       
       console.log(`Récupération de ${orders.length} commandes pour analyse par jour`);
@@ -180,15 +241,15 @@ const statsService = {
       const startDate = new Date(endDate);
       
       // Ajuster la période selon le paramètre de date
-      if (dateParam === 'today') {
+      if (date === 'today') {
         // Pour 'today', afficher uniquement aujourd'hui
         console.log('Filtre: Aujourd\'hui - Affichage du jour actuel uniquement');
         // startDate est déjà égal à endDate (aujourd'hui)
-      } else if (dateParam === 'week') {
+      } else if (date === 'week') {
         // Pour 'week', afficher les 7 derniers jours
         console.log('Filtre: 7 jours - Affichage des 7 derniers jours');
         startDate.setDate(endDate.getDate() - 6); // 7 jours en tout (aujourd'hui inclus)
-      } else if (dateParam === 'month') {
+      } else if (date === 'month') {
         // Pour 'month', afficher les 30 derniers jours
         console.log('Filtre: 1 mois - Affichage des 30 derniers jours');
         startDate.setDate(endDate.getDate() - 29); // 30 jours en tout (aujourd'hui inclus)
@@ -254,7 +315,7 @@ const statsService = {
         const dateObj = new Date(date);
         let formattedDate;
         
-        if (dateParam === 'month') {
+        if (date === 'month') {
           // Pour la vue mensuelle, inclure le jour et le mois (format court)
           const day = dateObj.getDate();
           const month = dateObj.toLocaleString('fr-FR', { month: 'short' });
@@ -265,7 +326,7 @@ const statsService = {
           if (dateObj.getFullYear() !== currentYear) {
             formattedDate += ` ${dateObj.getFullYear()}`;
           }
-        } else if (dateParam === 'today') {
+        } else if (date === 'today') {
           // Pour la vue d'aujourd'hui, inclure l'heure
           const hours = dateObj.getHours().toString().padStart(2, '0');
           const minutes = dateObj.getMinutes().toString().padStart(2, '0');
@@ -320,13 +381,24 @@ const statsService = {
   },
 
   // Récupérer les statistiques de commandes complétées (emballées)
-  getCompletedTasks: async (date = 'today') => {
-    // Forcer date à être une chaîne valide
-    const dateParam = String(date || 'today');
-    console.log(`getCompletedTasks - Période demandée: [${dateParam}]`);
+  getCompletedTasks: async (date = 'today', customStartDate = null, customEndDate = null) => {
+    console.log(`getCompletedTasks - Période demandée: [${date}]`);
+    if (date === 'custom' && customStartDate && customEndDate) {
+      console.log(`Dates personnalisées: ${customStartDate.toISOString().split('T')[0]} au ${customEndDate.toISOString().split('T')[0]}`);
+    }
     try {
       // Récupérer les commandes du jour ou d'une date spécifique
-      const response = await axios.get(`${API_BASE}/orders/dashboard/?date=${dateParam}`, getAuthHeaders());
+      let apiUrl = `${API_BASE}/orders/dashboard/?`;
+      
+      // Gestion des différents types de filtres de date
+      if (date === 'custom' && customStartDate && customEndDate) {
+        apiUrl += `start_date=${customStartDate.toISOString().split('T')[0]}&end_date=${customEndDate.toISOString().split('T')[0]}`;
+      } else {
+        apiUrl += `date=${date}`;
+      }
+      
+      console.log(`getCompletedTasks - URL: ${apiUrl}`);
+      const response = await axios.get(apiUrl, getAuthHeaders());
       const data = response.data;
       
       // Utiliser les données du dashboard pour créer des statistiques mensuelles
@@ -361,13 +433,20 @@ const statsService = {
   },
 
   // Récupérer les statistiques de commandes récentes
-  getRecentOrders: async (date = 'today') => {
-    // Forcer date à être une chaîne valide
-    const dateParam = String(date || 'today');
-    console.log(`getRecentOrders - Période demandée: [${dateParam}]`);
+  getRecentOrders: async (date = 'today', customStartDate = null, customEndDate = null) => {
     try {
-      // Récupérer les commandes récentes du jour ou d'une date spécifique
-      const response = await axios.get(`${API_BASE}/orders/?date=${dateParam}`, getAuthHeaders());
+      let apiUrl = `${API_BASE}/orders/?limit=10&`;
+      
+      // Gestion des différents types de filtres de date
+      if (date === 'custom' && customStartDate && customEndDate) {
+        apiUrl += `start_date=${customStartDate.toISOString().split('T')[0]}&end_date=${customEndDate.toISOString().split('T')[0]}`;
+      } else {
+        apiUrl += `date=${date}`;
+      }
+      
+      console.log(`getRecentOrders - URL: ${apiUrl}`);
+      // Récupérer les commandes
+      const response = await axios.get(apiUrl, getAuthHeaders());
       
       // Ajouter des logs pour déboguer
       console.log('Réponse des commandes récentes:', response.data);
@@ -407,10 +486,19 @@ const statsService = {
   },
   
   // Récupérer les statistiques de performance des agents
-  getAgentPerformance: async (date = 'today') => {
+  getAgentPerformance: async (date = 'today', customStartDate = null, customEndDate = null) => {
     try {
+      let apiUrl = `${API_BASE}/orders/?`;
+      
+      // Gestion des différents types de filtres de date
+      if (date === 'custom' && customStartDate && customEndDate) {
+        apiUrl += `start_date=${customStartDate.toISOString().split('T')[0]}&end_date=${customEndDate.toISOString().split('T')[0]}`;
+      } else {
+        apiUrl += `date=${date}`;
+      }
+      
       // Récupérer les commandes pour analyser les performances réelles
-      const allOrders = await axios.get(`${API_BASE}/orders/?date=${date}`, getAuthHeaders());
+      const allOrders = await axios.get(apiUrl, getAuthHeaders());
       const orders = allOrders.data;
       
       console.log(`Récupération de ${orders.length} commandes pour analyse des performances réelles`);
@@ -437,6 +525,15 @@ const statsService = {
             const fullName = agent.details.first_name && agent.details.last_name
               ? `${agent.details.first_name} ${agent.details.last_name}`
               : agent.details.username;
+              
+            // Ajouter un log pour déboguer le format des noms d'agents
+            console.log('Format du nom d\'agent:', {
+              id: agent.id,
+              firstName: agent.details.first_name,
+              lastName: agent.details.last_name,
+              fullName,
+              username: agent.details.username
+            });
               
             agentsMap[agent.id] = {
               id: agent.id,

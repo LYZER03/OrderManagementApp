@@ -50,3 +50,4 @@ venv/
 # --- Misc ---
 *.orig
 *.rej
+#.windsurfrules

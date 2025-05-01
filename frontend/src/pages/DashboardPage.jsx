@@ -33,7 +33,7 @@ const DashboardPage = () => {
       description: 'Gérer les commandes en attente de préparation',
       icon: <InventoryIcon fontSize="large" />,
       path: '/preparation',
-      roles: ['AGENT', 'MANAGER'],
+      roles: ['AGENT', 'SUPER_AGENT', 'MANAGER'],
       color: theme.palette.primary.main
     },
     {
@@ -41,7 +41,7 @@ const DashboardPage = () => {
       description: 'Contrôler les commandes préparées',
       icon: <CheckCircleIcon fontSize="large" />,
       path: '/control',
-      roles: ['AGENT', 'MANAGER'],
+      roles: ['AGENT', 'SUPER_AGENT', 'MANAGER'],
       color: theme.palette.success.main
     },
     {
@@ -49,7 +49,7 @@ const DashboardPage = () => {
       description: 'Emballer les commandes contrôlées',
       icon: <LocalShippingIcon fontSize="large" />,
       path: '/packing',
-      roles: ['AGENT', 'MANAGER'],
+      roles: ['AGENT', 'SUPER_AGENT', 'MANAGER'],
       color: theme.palette.info.main
     },
     {
@@ -73,7 +73,7 @@ const DashboardPage = () => {
       description: 'Visualiser et gérer toutes les commandes',
       icon: <TableViewIcon fontSize="large" />,
       path: '/orders-table',
-      roles: ['MANAGER'],
+      roles: ['SUPER_AGENT', 'MANAGER'],
       color: theme.palette.error.main
     }
   ];
