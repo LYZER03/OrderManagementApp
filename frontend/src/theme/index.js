@@ -1,60 +1,116 @@
 import { createTheme } from '@mui/material/styles';
 
-// Couleurs
+// Enhanced Color Palette
 const primary = {
-  light: '#E3F2FD',
-  main: '#2196F3',
-  dark: '#1E88E5',
-  200: '#90CAF9',
-  800: '#1565C0'
+  50: '#EBF8FF',
+  100: '#BEE3F8',
+  200: '#90CDF4',
+  300: '#63B3ED',
+  400: '#4299E1',
+  500: '#3182CE',
+  600: '#2B77CB',
+  700: '#2C5AA0',
+  800: '#2A4365',
+  900: '#1A365D',
+  main: '#3182CE',
+  light: '#63B3ED',
+  dark: '#2C5AA0'
 };
 
 const secondary = {
-  light: '#EDE7F6',
-  main: '#673AB7',
-  dark: '#5E35B1',
-  200: '#B39DDB',
-  800: '#4527A0'
+  50: '#FAF5FF',
+  100: '#E9D8FD',
+  200: '#D6BCFA',
+  300: '#B794F6',
+  400: '#9F7AEA',
+  500: '#805AD5',
+  600: '#6B46C1',
+  700: '#553C9A',
+  800: '#44337A',
+  900: '#322659',
+  main: '#805AD5',
+  light: '#B794F6',
+  dark: '#553C9A'
 };
 
 const success = {
-  light: '#B9F6CA',
-  main: '#00C853',
-  dark: '#00A042',
-  200: '#69F0AE',
-  800: '#00A042'
+  50: '#F0FFF4',
+  100: '#C6F6D5',
+  200: '#9AE6B4',
+  300: '#68D391',
+  400: '#48BB78',
+  500: '#38A169',
+  600: '#2F855A',
+  700: '#276749',
+  800: '#22543D',
+  900: '#1C4532',
+  main: '#38A169',
+  light: '#68D391',
+  dark: '#276749'
 };
 
 const error = {
-  light: '#EF9A9A',
-  main: '#F44336',
-  dark: '#C62828',
-  200: '#EF9A9A',
-  800: '#C62828'
+  50: '#FED7D7',
+  100: '#FEB2B2',
+  200: '#FC8181',
+  300: '#F56565',
+  400: '#E53E3E',
+  500: '#C53030',
+  600: '#9B2C2C',
+  700: '#742A2A',
+  800: '#63171B',
+  900: '#521B1B',
+  main: '#E53E3E',
+  light: '#F56565',
+  dark: '#9B2C2C'
 };
 
 const warning = {
-  light: '#FFF8E1',
-  main: '#FFB74D',
-  dark: '#F57C00',
-  200: '#FFE57F',
-  800: '#EF6C00'
+  50: '#FFFBEB',
+  100: '#FEF3C7',
+  200: '#FDE68A',
+  300: '#FCD34D',
+  400: '#FBBF24',
+  500: '#F59E0B',
+  600: '#D97706',
+  700: '#B45309',
+  800: '#92400E',
+  900: '#78350F',
+  main: '#F59E0B',
+  light: '#FCD34D',
+  dark: '#D97706'
+};
+
+const info = {
+  50: '#EBF8FF',
+  100: '#BEE3F8',
+  200: '#90CDF4',
+  300: '#63B3ED',
+  400: '#4299E1',
+  500: '#3182CE',
+  600: '#2B77CB',
+  700: '#2C5AA0',
+  800: '#2A4365',
+  900: '#1A365D',
+  main: '#3182CE',
+  light: '#63B3ED',
+  dark: '#2C5AA0'
 };
 
 const grey = {
   50: '#FAFAFA',
-  100: '#F5F5F5',
-  200: '#EEEEEE',
-  300: '#E0E0E0',
-  400: '#BDBDBD',
-  500: '#9E9E9E',
-  600: '#757575',
-  700: '#616161',
-  800: '#424242',
-  900: '#212121'
+  100: '#F7FAFC',
+  200: '#EDF2F7',
+  300: '#E2E8F0',
+  400: '#CBD5E0',
+  500: '#A0AEC0',
+  600: '#718096',
+  700: '#4A5568',
+  800: '#2D3748',
+  900: '#1A202C'
 };
 
-// Options du thème
+// Enhanced Theme Options
 const themeOptions = {
   palette: {
     primary,
@@ -62,17 +118,24 @@ const themeOptions = {
     success,
     error,
     warning,
+    info,
     grey,
     background: {
-      default: '#F8F9FA',
+      default: '#FAFBFC',
       paper: '#FFFFFF'
     },
     text: {
       primary: grey[900],
-      secondary: grey[700],
-      disabled: grey[500]
+      secondary: grey[600],
+      disabled: grey[400]
     },
-    divider: grey[200]
+    divider: grey[200],
+    action: {
+      hover: 'rgba(0, 0, 0, 0.04)',
+      selected: 'rgba(0, 0, 0, 0.08)',
+      disabled: 'rgba(0, 0, 0, 0.26)',
+      disabledBackground: 'rgba(0, 0, 0, 0.12)'
+    }
   },
   typography: {
     fontFamily: [
@@ -172,10 +235,25 @@ const themeOptions = {
       styleOverrides: {
         root: {
           fontWeight: 500,
-          borderRadius: '8px'
+          borderRadius: '8px',
+          textTransform: 'none',
+          fontSize: '0.875rem',
+          padding: '8px 16px',
+          transition: 'all 0.2s ease-in-out'
         },
         contained: {
-          boxShadow: 'none'
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.12)',
+            transform: 'translateY(-1px)'
+          }
+        },
+        outlined: {
+          borderWidth: '1.5px',
+          '&:hover': {
+            borderWidth: '1.5px',
+            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+          }
         }
       }
     },

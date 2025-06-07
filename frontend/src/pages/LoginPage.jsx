@@ -26,7 +26,7 @@ const LoginPage = () => {
             width: '100%',
             margin: 0,
             padding: 0,
-            overflow: 'hidden',
+            overflow: 'auto', // Permettre le défilement
           },
           '#root': {
             display: 'flex',
@@ -43,12 +43,14 @@ const LoginPage = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: { xs: 'flex-start', sm: 'center' }, // Alignement en haut sur mobile
           backgroundColor: theme.palette.grey[100],
           position: 'relative',
-          overflow: 'hidden',
+          overflow: 'auto', // Permettre le défilement
           boxSizing: 'border-box',
-          padding: { xs: 2, sm: 3, md: 4 },
+          padding: { xs: 1, sm: 3, md: 4 }, // Réduire le padding sur mobile
+          paddingTop: { xs: 2, sm: 3, md: 4 }, // Padding top spécifique
+          paddingBottom: { xs: 8, sm: 3, md: 4 }, // Plus d'espace en bas sur mobile
           margin: 0
         }}
     >
@@ -58,12 +60,13 @@ const LoginPage = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          maxWidth: '500px',
+          maxWidth: { xs: '100%', sm: '500px' }, // Pleine largeur sur mobile
           width: '100%',
-          p: { xs: 2, sm: 3, md: 4 },
-          borderRadius: 3,
+          p: { xs: 1.5, sm: 3, md: 4 }, // Réduire le padding sur mobile
+          borderRadius: { xs: 2, sm: 3 }, // Réduire le border radius sur mobile
           backgroundColor: 'white',
-          mb: 4
+          mb: { xs: 2, sm: 4 }, // Réduire la marge bottom sur mobile
+          mx: { xs: 0.5, sm: 0 } // Petite marge horizontale sur mobile
         }}
       >
         <Box
@@ -89,11 +92,12 @@ const LoginPage = () => {
         color="text.secondary" 
         align="center" 
         sx={{ 
-          mt: 2,
-          position: 'absolute',
-          bottom: '1rem',
+          mt: { xs: 4, sm: 2 },
+          position: { xs: 'relative', sm: 'absolute' }, // Position relative sur mobile
+          bottom: { xs: 'auto', sm: '1rem' },
           width: '100%',
-          textAlign: 'center'
+          textAlign: 'center',
+          px: 2 // Padding horizontal pour éviter les débordements
         }}
       >
         2025 Application de Gestion de Commandes | Tous droits réservés

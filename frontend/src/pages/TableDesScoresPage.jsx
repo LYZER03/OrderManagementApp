@@ -7,9 +7,16 @@ import {
   Grid,
   CircularProgress,
   useTheme,
-  IconButton
+  IconButton,
+  Fade,
+  Grow,
+  Chip,
+  Avatar
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import { keyframes } from '@mui/system';
 import axios from 'axios';
 import userService from '../services/userService';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +32,7 @@ const TableDesScoresPage = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({});
   const [refreshInterval, setRefreshInterval] = useState(null);
@@ -107,8 +115,13 @@ const TableDesScoresPage = () => {
   };
 
   // Charger les données
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    
     try {
       const [usersData, ordersData] = await Promise.all([
         fetchUsers(),
@@ -128,12 +141,21 @@ const TableDesScoresPage = () => {
       
       console.log('Utilisateurs après filtrage:', filteredUsers);
       
+      // Attendre un peu pour une transition plus fluide lors du rafraîchissement
+      if (isRefresh) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
       setUsers(filteredUsers);
       setStats(calculateUserStats(filteredUsers, ordersData));
     } catch (error) {
       console.error('Erreur lors du chargement des données', error);
     } finally {
-      setLoading(false);
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -145,7 +167,7 @@ const TableDesScoresPage = () => {
   // Rafraîchissement automatique toutes les 10 secondes
   useEffect(() => {
     const interval = setInterval(() => {
-      loadData();
+      loadData(true); // Indiquer que c'est un rafraîchissement
     }, 10000);
 
     setRefreshInterval(interval);
@@ -194,6 +216,28 @@ const TableDesScoresPage = () => {
   // Médailles pour le podium
   const medals = ['🥇', '🥈', '🥉'];
 
+  // Animation keyframes
+  const pulseAnimation = keyframes`
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  `;
+
+  const shimmerAnimation = keyframes`
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+  `;
+
+  const floatAnimation = keyframes`
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  `;
+
+  const refreshPulseAnimation = keyframes`
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  `;
+
   return (
     <Box sx={{ 
       minHeight: '100vh', 
@@ -206,101 +250,329 @@ const TableDesScoresPage = () => {
       bottom: 0,
       margin: 0,
       padding: 0,
-      backgroundColor: '#fff',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'flex-start',
       overflowX: 'hidden'
     }}>
-      <Box sx={{ width: '100%', maxWidth: 1400, mb: 1, mt: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1, position: 'relative' }}>
-          <IconButton onClick={() => navigate(-1)} sx={{ position: 'absolute', left: 0 }}>
-            <ArrowBackIcon fontSize="large" />
-          </IconButton>
-          <img src={gfcLogo} alt="Logo" style={{ height: '60px', marginRight: '16px' }} />
-
-        </Box>
-        <Typography variant="h6" align="center" color="text.secondary" sx={{ mb: 1 }}>
-          Commandes traitées aujourd'hui par agent
-        </Typography>
-        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 2 }}>
-          Dernière mise à jour : {new Date().toLocaleTimeString('fr-FR')}
-        </Typography>
-      </Box>
-
-      {userScores.length === 0 ? (
-        <Paper sx={{ p: 2, mb: 2, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
-            Aucun utilisateur trouvé. Veuillez vérifier les données.
-          </Typography>
-        </Paper>
-      ) : null}
-
-      <Grid container spacing={{ xs: 1, md: 2 }} justifyContent="center" alignItems="stretch" sx={{ width: '100%', maxWidth: 1400, mb: 3 }}>
-        {userScores.map((user, idx) => (
-          <Grid item xs={6} sm={4} md={3} lg={2} key={user.id} style={{ display: 'flex' }}>
-            <Paper
-              elevation={3}
-              sx={{
-                width: '100%',
-                minHeight: 160, // Réduit la hauteur minimale
-                borderRadius: 2, // Réduit légèrement le rayon de bordure
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                p: 1.5, // Réduit le padding
-                position: 'relative',
-                boxShadow: '0 1px 4px 0 #e0e0e0', // Ombre plus légère
-                border: '1px solid #e0e0e0', // Bordure plus fine
-                background: '#fff',
-                mt: idx < 3 ? 0 : 0.5, // Espacement réduit
-                flex: 1
+      <Fade in={true} timeout={1000}>
+        <Box sx={{ 
+          width: '100%', 
+          maxWidth: 1400, 
+          mb: 3, 
+          mt: 12, 
+          px: 2,
+          animation: refreshing ? `${refreshPulseAnimation} 2s ease-in-out infinite` : 'none',
+          transition: 'all 0.3s ease'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, position: 'relative' }}>
+            <IconButton 
+              onClick={() => navigate(-1)} 
+              sx={{ 
+                position: 'absolute', 
+                left: 16,
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  transform: 'scale(1.1)'
+                },
+                transition: 'all 0.3s ease'
               }}
             >
-              {/* Nom et prénom */}
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, textAlign: 'center', mb: 0.5 }}>
-                {user.username}
-              </Typography>
-              {/* Score total */}
-              <Typography variant="h3" sx={{ color: '#51158C', fontWeight: 800, mb: 0.5, mt: 0, textShadow: '0 1px 4px #e0e0e0' }}>
-                {user.total}
-              </Typography>
-              {/* Détail par type avec badges */}
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 0.5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#27AE60', mr: 0.25 }} />
-                  <Typography variant="body2" sx={{ color: '#27AE60', fontWeight: 700 }}>{user.prepared}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#F39C12', mr: 0.25 }} />
-                  <Typography variant="body2" sx={{ color: '#F39C12', fontWeight: 700 }}>{user.controlled}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#8E44AD', mr: 0.25 }} />
-                  <Typography variant="body2" sx={{ color: '#8E44AD', fontWeight: 700 }}>{user.packed}</Typography>
-                </Box>
-              </Box>
-            </Paper>
-          </Grid>
-        ))}
+              <ArrowBackIcon fontSize="large" />
+            </IconButton>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              borderRadius: 3,
+              p: 2,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <img src={gfcLogo} alt="Logo" style={{ height: '60px', marginRight: '16px' }} />
+              <EmojiEventsIcon sx={{ color: '#FFD700', fontSize: 40, mr: 1 }} />
+            </Box>
+          </Box>
+          <Typography 
+            variant="h4" 
+            align="center" 
+            sx={{ 
+              mb: 1,
+              color: 'white',
+              fontWeight: 'bold',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+              background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}
+          >
+            Tableau des Scores
+          </Typography>
+          <Typography 
+            variant="h6" 
+            align="center" 
+            sx={{ 
+              mb: 1,
+              color: 'rgba(255,255,255,0.9)',
+              fontWeight: 500
+            }}
+          >
+            Commandes traitées aujourd'hui par agent
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2, position: 'relative' }}>
+            <Chip
+              icon={refreshing ? <CircularProgress size={16} sx={{ color: 'white' }} /> : <TrendingUpIcon />}
+              label={refreshing ? 'Mise à jour en cours...' : `Dernière mise à jour : ${new Date().toLocaleTimeString('fr-FR')}`}
+              sx={{
+                backgroundColor: refreshing ? 'rgba(255,235,59,0.3)' : 'rgba(255,255,255,0.2)',
+                color: 'white',
+                backdropFilter: 'blur(10px)',
+                fontWeight: 500,
+                transition: 'all 0.3s ease'
+              }}
+            />
+          </Box>
+        </Box>
+      </Fade>
+
+      {userScores.length === 0 ? (
+        <Fade in={true} timeout={1500}>
+          <Paper sx={{ 
+            p: 4, 
+            mb: 2, 
+            textAlign: 'center',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 3,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+          }}>
+            <Typography variant="h6" color="text.secondary">
+              Aucun utilisateur trouvé. Veuillez vérifier les données.
+            </Typography>
+          </Paper>
+        </Fade>
+      ) : null}
+
+      <Grid container spacing={{ xs: 2, md: 3 }} justifyContent="center" alignItems="stretch" sx={{ width: '100%', maxWidth: 1400, mb: 4, px: 2 }}>
+        {userScores.map((user, idx) => {
+          const isTopThree = idx < 3;
+          const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+          const rankIcons = ['🥇', '🥈', '🥉'];
+          
+          return (
+            <Grid item xs={6} sm={4} md={3} lg={2} key={user.id} style={{ display: 'flex' }}>
+              <Grow in={!refreshing} timeout={refreshing ? 300 : 1000 + idx * 200}>
+                <Paper
+                  elevation={isTopThree ? 8 : 4}
+                  sx={{
+                    width: '100%',
+                    minHeight: 200,
+                    borderRadius: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    p: 2,
+                    position: 'relative',
+                    background: isTopThree 
+                      ? `linear-gradient(135deg, ${rankColors[idx]} 0%, rgba(255,255,255,0.9) 100%)`
+                      : 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,240,240,0.95) 100%)',
+                    backdropFilter: 'blur(10px)',
+                    border: isTopThree ? `3px solid ${rankColors[idx]}` : '1px solid rgba(255,255,255,0.3)',
+                    boxShadow: isTopThree 
+                      ? `0 12px 40px rgba(0,0,0,0.15), 0 0 20px ${rankColors[idx]}40`
+                      : '0 8px 32px rgba(0,0,0,0.1)',
+                    flex: 1,
+                    transform: isTopThree ? 'scale(1.05)' : 'scale(1)',
+                    transition: 'all 0.3s ease',
+                    animation: isTopThree ? `${floatAnimation} 3s ease-in-out infinite` : 'none',
+                    '&:hover': {
+                      transform: isTopThree ? 'scale(1.08)' : 'scale(1.03)',
+                      boxShadow: isTopThree 
+                        ? `0 16px 50px rgba(0,0,0,0.2), 0 0 30px ${rankColors[idx]}60`
+                        : '0 12px 40px rgba(0,0,0,0.15)'
+                    }
+                  }}
+                >
+                  {/* Badge de rang pour le top 3 */}
+                  {isTopThree && (
+                    <Box sx={{
+                      position: 'absolute',
+                      top: -10,
+                      right: -10,
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      backgroundColor: rankColors[idx],
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      animation: `${pulseAnimation} 2s ease-in-out infinite`
+                    }}>
+                      {rankIcons[idx]}
+                    </Box>
+                  )}
+                  
+                  {/* Avatar avec initiales */}
+                  <Avatar sx={{
+                    width: 50,
+                    height: 50,
+                    mb: 1,
+                    backgroundColor: isTopThree ? rankColors[idx] : '#667eea',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '18px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                  }}>
+                    {user.username.charAt(0).toUpperCase()}
+                  </Avatar>
+                  
+                  {/* Nom d'utilisateur */}
+                  <Typography variant="subtitle1" sx={{ 
+                    fontWeight: 700, 
+                    textAlign: 'center', 
+                    mb: 1,
+                    color: isTopThree ? '#333' : '#555',
+                    textShadow: isTopThree ? '1px 1px 2px rgba(0,0,0,0.1)' : 'none'
+                  }}>
+                    {user.username}
+                  </Typography>
+                  
+                  {/* Score total avec effet shimmer */}
+                  <Box sx={{
+                    position: 'relative',
+                    mb: 1.5
+                  }}>
+                    <Typography variant="h2" sx={{ 
+                      color: isTopThree ? '#333' : '#667eea', 
+                      fontWeight: 900, 
+                      textAlign: 'center',
+                      textShadow: isTopThree ? '2px 2px 4px rgba(0,0,0,0.2)' : '1px 1px 2px rgba(0,0,0,0.1)',
+                      background: isTopThree 
+                        ? `linear-gradient(90deg, ${rankColors[idx]}, #333, ${rankColors[idx]})`
+                        : 'linear-gradient(90deg, #667eea, #764ba2, #667eea)',
+                      backgroundSize: '200px 100%',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      animation: `${shimmerAnimation} 3s ease-in-out infinite`
+                    }}>
+                      {user.total}
+                    </Typography>
+                  </Box>
+                  
+                  {/* Statistiques détaillées avec design amélioré */}
+                  <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <Chip
+                      size="small"
+                      label={user.prepared}
+                      sx={{
+                        backgroundColor: '#27AE60',
+                        color: 'white',
+                        fontWeight: 700,
+                        minWidth: 35,
+                        '&:before': {
+                          content: '"📦"',
+                          marginRight: '4px'
+                        }
+                      }}
+                    />
+                    <Chip
+                      size="small"
+                      label={user.controlled}
+                      sx={{
+                        backgroundColor: '#F39C12',
+                        color: 'white',
+                        fontWeight: 700,
+                        minWidth: 35,
+                        '&:before': {
+                          content: '"✅"',
+                          marginRight: '4px'
+                        }
+                      }}
+                    />
+                    <Chip
+                      size="small"
+                      label={user.packed}
+                      sx={{
+                        backgroundColor: '#8E44AD',
+                        color: 'white',
+                        fontWeight: 700,
+                        minWidth: 35,
+                        '&:before': {
+                          content: '"📮"',
+                          marginRight: '4px'
+                        }
+                      }}
+                    />
+                  </Box>
+                </Paper>
+              </Grow>
+            </Grid>
+          );
+        })}
       </Grid>
 
-      {/* Légende compacte */}
-      <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#27AE60', mr: 0.5 }} />
-          <Typography variant="body2" sx={{ color: '#27AE60', fontWeight: 600 }}>Préparé</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#F39C12', mr: 0.5 }} />
-          <Typography variant="body2" sx={{ color: '#F39C12', fontWeight: 600 }}>Contrôlé</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Box sx={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#8E44AD', mr: 0.5 }} />
-          <Typography variant="body2" sx={{ color: '#8E44AD', fontWeight: 600 }}>Emballé</Typography>
-        </Box>
-      </Box>
+      {/* Légende améliorée */}
+      <Fade in={!refreshing} timeout={refreshing ? 300 : 2000}>
+        <Paper sx={{
+          mt: 2,
+          p: 2,
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+        }}>
+          <Typography variant="h6" sx={{ textAlign: 'center', mb: 2, color: '#333', fontWeight: 600 }}>
+            Légende des Actions
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                icon={<span>📦</span>}
+                label="Préparé"
+                sx={{
+                  backgroundColor: '#27AE60',
+                  color: 'white',
+                  fontWeight: 600,
+                  '&:hover': { backgroundColor: '#229954' }
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                icon={<span>✅</span>}
+                label="Contrôlé"
+                sx={{
+                  backgroundColor: '#F39C12',
+                  color: 'white',
+                  fontWeight: 600,
+                  '&:hover': { backgroundColor: '#E67E22' }
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                icon={<span>📮</span>}
+                label="Emballé"
+                sx={{
+                  backgroundColor: '#8E44AD',
+                  color: 'white',
+                  fontWeight: 600,
+                  '&:hover': { backgroundColor: '#7D3C98' }
+                }}
+              />
+            </Box>
+          </Box>
+        </Paper>
+      </Fade>
     </Box>
   );
 };

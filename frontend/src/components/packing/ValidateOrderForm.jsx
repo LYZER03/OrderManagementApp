@@ -1,5 +1,5 @@
 // ValidateOrderForm.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -13,8 +13,18 @@ import {
   Typography,
   Chip,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Slide,
+  Zoom,
+  Fade,
+  IconButton
 } from '@mui/material';
+import {
+  LocalShipping as PackageIcon,
+  SwipeRight as SwipeRightIcon,
+  Close as CloseIcon
+} from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import orderService from '../../services/orderService';
@@ -25,9 +35,42 @@ const ValidateOrderForm = ({ open, onClose, order, onOrderValidated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [swipeProgress, setSwipeProgress] = useState(0);
+  const [isSwipeComplete, setIsSwipeComplete] = useState(false);
+  const swipeRef = useRef(null);
+  const startX = useRef(0);
+  const currentX = useRef(0);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSwipeStart = (e) => {
+    if (loading || success) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    startX.current = clientX;
+    currentX.current = clientX;
+  };
+
+  const handleSwipeMove = (e) => {
+    if (loading || success || !startX.current) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    currentX.current = clientX;
+    const diff = clientX - startX.current;
+    const maxWidth = swipeRef.current ? swipeRef.current.offsetWidth - 60 : 200;
+    const progress = Math.max(0, Math.min(1, diff / maxWidth));
+    setSwipeProgress(progress);
+  };
+
+  const handleSwipeEnd = () => {
+    if (loading || success) return;
+    if (swipeProgress > 0.8) {
+      setIsSwipeComplete(true);
+      handleSubmit();
+    } else {
+      setSwipeProgress(0);
+    }
+    startX.current = 0;
+    currentX.current = 0;
+  };
+
+  const handleSubmit = async () => {
     setLoading(true);
     setError('');
     setSuccess(false);
@@ -46,14 +89,30 @@ const ValidateOrderForm = ({ open, onClose, order, onOrderValidated }) => {
       // Fermer le dialogue après un court délai
       setTimeout(() => {
         onClose();
-      }, 1500);
+        // Reset states
+        setSwipeProgress(0);
+        setIsSwipeComplete(false);
+        setSuccess(false);
+        setError('');
+      }, 2000);
       
     } catch (err) {
       console.error('Erreur lors de la validation de l\'emballage', err);
       setError(err.message || 'Une erreur est survenue lors de la validation de l\'emballage');
+      setSwipeProgress(0);
+      setIsSwipeComplete(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    if (loading) return;
+    setSwipeProgress(0);
+    setIsSwipeComplete(false);
+    setSuccess(false);
+    setError('');
+    onClose();
   };
 
   if (!order) return null;
@@ -61,19 +120,58 @@ const ValidateOrderForm = ({ open, onClose, order, onOrderValidated }) => {
   return (
     <Dialog 
       open={open} 
-      onClose={loading ? null : onClose} 
+      onClose={loading ? null : handleClose}
       maxWidth="sm" 
       fullWidth
+      TransitionComponent={Slide}
+      TransitionProps={{ direction: 'up' }}
       PaperProps={{
         sx: {
           width: isMobile ? '100%' : undefined,
           margin: isMobile ? '16px' : undefined,
-          borderRadius: isMobile ? '12px' : undefined,
+          borderRadius: isMobile ? '12px' : '16px',
+          overflow: 'hidden'
         }
       }}
     >
-      <DialogTitle sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem', py: isMobile ? 1.5 : 2 }}>
-        Valider l'emballage
+      <DialogTitle sx={{ 
+        fontSize: isMobile ? '1.25rem' : '1.5rem', 
+        py: isMobile ? 1.5 : 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        bgcolor: success ? theme.palette.warning.light : theme.palette.background.paper,
+        color: success ? theme.palette.warning.contrastText : 'inherit',
+        transition: 'all 0.3s ease'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <AnimatePresence>
+            {success ? (
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+              >
+                <PackageIcon sx={{ color: theme.palette.warning.contrastText }} />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+          {success ? 'Emballage validé !' : 'Valider l\'emballage'}
+        </Box>
+        {!loading && (
+          <IconButton
+            onClick={handleClose}
+            size="small"
+            sx={{ 
+              color: success ? theme.palette.warning.contrastText : 'inherit',
+              opacity: 0.7,
+              '&:hover': { opacity: 1 }
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
       </DialogTitle>
       <DialogContent sx={{ px: isMobile ? 2 : 3 }}>
         <DialogContentText sx={{ mb: 2 }}>
@@ -102,36 +200,192 @@ const ValidateOrderForm = ({ open, onClose, order, onOrderValidated }) => {
           </Typography>
         </Box>
         
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: 'spring', stiffness: 200 }}
+            >
+              <Alert 
+                severity="warning" 
+                sx={{ 
+                  mb: 2,
+                  '& .MuiAlert-icon': {
+                    animation: 'pulse 1s infinite'
+                  }
+                }}
+              >
+                Emballage validé avec succès !
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </DialogContent>
+      <DialogActions sx={{ px: isMobile ? 2 : 3, pb: isMobile ? 2 : 3, flexDirection: 'column', gap: 2 }}>
+        {!success && (
+          <>
+            {/* Swipe to validate */}
+            <Box
+              ref={swipeRef}
+              sx={{
+                width: '100%',
+                height: 60,
+                bgcolor: theme.palette.warning.light,
+                borderRadius: 3,
+                position: 'relative',
+                overflow: 'hidden',
+                cursor: loading ? 'not-allowed' : 'grab',
+                opacity: loading ? 0.5 : 1,
+                transition: 'opacity 0.3s ease'
+              }}
+              onMouseDown={handleSwipeStart}
+              onMouseMove={handleSwipeMove}
+              onMouseUp={handleSwipeEnd}
+              onMouseLeave={handleSwipeEnd}
+              onTouchStart={handleSwipeStart}
+              onTouchMove={handleSwipeMove}
+              onTouchEnd={handleSwipeEnd}
+            >
+              {/* Background progress */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  height: '100%',
+                  width: `${swipeProgress * 100}%`,
+                  bgcolor: theme.palette.warning.main,
+                  transition: isSwipeComplete ? 'width 0.3s ease' : 'none'
+                }}
+              />
+              
+              {/* Swipe button */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  top: 4,
+                  left: 4 + (swipeProgress * (swipeRef.current?.offsetWidth - 60 || 200)),
+                  width: 52,
+                  height: 52,
+                  backgroundColor: theme.palette.common.white,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: theme.shadows[3],
+                  zIndex: 2
+                }}
+                animate={{
+                  scale: loading ? [1, 1.1, 1] : 1
+                }}
+                transition={{
+                  scale: {
+                    duration: 1,
+                    repeat: loading ? Infinity : 0
+                  }
+                }}
+              >
+                {loading ? (
+                  <CircularProgress size={24} color="warning" />
+                ) : (
+                  <SwipeRightIcon 
+                    sx={{ 
+                      color: theme.palette.warning.main,
+                      transform: `rotate(${swipeProgress * 360}deg)`,
+                      transition: 'transform 0.1s ease'
+                    }} 
+                  />
+                )}
+              </motion.div>
+              
+              {/* Text overlay */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: theme.palette.warning.contrastText,
+                  fontWeight: 600,
+                  fontSize: isMobile ? '0.9rem' : '1rem',
+                  opacity: 1 - swipeProgress * 0.7,
+                  transition: 'opacity 0.1s ease',
+                  pointerEvents: 'none'
+                }}
+              >
+                {loading ? 'Validation en cours...' : 'Glissez pour valider l\'emballage'}
+              </Box>
+            </Box>
+            
+            {/* Traditional button as fallback */}
+            <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
+              <Button 
+                onClick={handleClose} 
+                disabled={loading}
+                sx={{ 
+                  fontSize: isMobile ? '0.8rem' : '0.875rem',
+                  flex: 1
+                }}
+              >
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleSubmit} 
+                variant="outlined" 
+                color="warning" 
+                disabled={loading}
+                sx={{ 
+                  fontSize: isMobile ? '0.8rem' : '0.875rem',
+                  flex: 1
+                }}
+              >
+                Validation classique
+              </Button>
+            </Box>
+          </>
         )}
         
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            Emballage validé avec succès !
-          </Alert>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ width: '100%' }}
+          >
+            <Button 
+              onClick={handleClose}
+              variant="contained"
+              color="warning"
+              fullWidth
+              sx={{ 
+                fontSize: isMobile ? '0.9rem' : '1rem',
+                py: 1.5
+              }}
+            >
+              Fermer
+            </Button>
+          </motion.div>
         )}
-      </DialogContent>
-      <DialogActions sx={{ px: isMobile ? 2 : 3, pb: isMobile ? 2 : 3 }}>
-        <Button 
-          onClick={onClose} 
-          disabled={loading}
-          sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
-        >
-          Annuler
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
-          color="warning" 
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={isMobile ? 16 : 20} /> : null}
-          sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}
-        >
-          {loading ? 'Validation...' : isMobile ? 'Valider' : 'Valider l\'emballage'}
-        </Button>
       </DialogActions>
     </Dialog>
   );

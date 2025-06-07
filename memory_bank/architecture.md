@@ -63,5 +63,3 @@
 - 5 agents (agent1 to agent5)
 - 76 commands at different stages of the process
 - All users have password: 1234
-
-Translated with DeepL.com (free version)

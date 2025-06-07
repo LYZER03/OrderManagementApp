@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import gfcLogo from '../../assets/gfc_logo.webp';
 import gfcProvapLogo from '../../assets/gfc_provap_logo2.jpg';
+import CommandPalette from './CommandPalette';
 import { 
   AppBar, 
   Box, 
@@ -58,9 +60,23 @@ const AppLayout = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerExpanded, setDrawerExpanded] = useState(true);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   const drawerWidth = drawerExpanded ? expandedDrawerWidth : collapsedDrawerWidth;
+
+  // Command palette keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -112,7 +128,7 @@ const AppLayout = () => {
     {
       text: 'Table des Scores',
       icon: <BarChartIcon />,
-      path: '/table_score',
+      path: '/scores',
       roles: ['MANAGER']
     },
     {
@@ -478,6 +494,39 @@ const AppLayout = () => {
         <Toolbar sx={{ bgcolor: 'transparent' }} />
         <Outlet />
       </Box>
+      
+      {/* Command Palette */}
+      <CommandPalette 
+        open={commandPaletteOpen} 
+        onClose={() => setCommandPaletteOpen(false)} 
+      />
+      
+      {/* Toast Notifications */}
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: '8px',
+            boxShadow: theme.shadows[8]
+          },
+          success: {
+            iconTheme: {
+              primary: theme.palette.success.main,
+              secondary: theme.palette.success.contrastText
+            }
+          },
+          error: {
+            iconTheme: {
+              primary: theme.palette.error.main,
+              secondary: theme.palette.error.contrastText
+            }
+          }
+        }}
+      />
     </Box>
   );
 };

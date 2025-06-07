@@ -86,18 +86,31 @@ const LoginForm = () => {
       >
         <Avatar 
           sx={{ 
-            mb: 2, 
+            mb: { xs: 1.5, sm: 2 }, 
             bgcolor: '#FF8C00', // Couleur orange
-            width: 56,
-            height: 56
+            width: { xs: 48, sm: 56 }, // Plus petit sur mobile
+            height: { xs: 48, sm: 56 } // Plus petit sur mobile
           }}
         >
           <LockOutlinedIcon fontSize="large" sx={{ color: '#FFFFFF' }} />
         </Avatar>
-        <Typography component="h1" variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
+        <Typography 
+          component="h1" 
+          variant="h4" // Taille standard
+          sx={{ 
+            fontWeight: 600, 
+            mb: { xs: 0.5, sm: 1 },
+            fontSize: { xs: '1.5rem', sm: '2.125rem' } // Responsive via sx
+          }}
+        >
           Connexion
         </Typography>
-        <Typography variant="body2" color="text.secondary" textAlign="center">
+        <Typography 
+          variant="body2" 
+          color="text.secondary" 
+          textAlign="center"
+          sx={{ px: { xs: 1, sm: 0 } }} // Padding horizontal sur mobile
+        >
           Entrez vos identifiants pour accéder à l'application
         </Typography>
       </Box>
@@ -126,6 +139,7 @@ const LoginForm = () => {
           label="Nom d'utilisateur"
           variant="outlined"
           margin="normal"
+          size="medium" // Taille standard
           autoComplete="username"
           autoFocus
           value={formik.values.username}
@@ -154,6 +168,7 @@ const LoginForm = () => {
           type={showPassword ? 'text' : 'password'}
           variant="outlined"
           margin="normal"
+          size="medium" // Taille standard
           autoComplete="current-password"
           value={formik.values.password}
           onChange={formik.handleChange}
@@ -188,12 +203,12 @@ const LoginForm = () => {
           type="submit"
           fullWidth
           variant="contained"
-          size="large"
+          size="large" // Taille standard
           disabled={loading}
           sx={{ 
-            mt: 3, 
-            mb: 2, 
-            py: 1.5,
+            mt: { xs: 2, sm: 3 }, // Réduire la marge top sur mobile
+            mb: { xs: 1.5, sm: 2 }, // Réduire la marge bottom sur mobile
+            py: { xs: 1.2, sm: 1.5 }, // Réduire le padding vertical sur mobile
             borderRadius: 2,
             fontWeight: 600,
             boxShadow: theme.shadows[3],
@@ -206,15 +221,15 @@ const LoginForm = () => {
           {loading ? <CircularProgress size={24} /> : 'Se connecter'}
         </Button>
         
-        <Divider sx={{ my: 3 }}>
+        <Divider sx={{ my: { xs: 2, sm: 3 } }}> {/* Réduire les marges sur mobile */}
           <Typography variant="body2" color="text.secondary">
             Informations de connexion
           </Typography>
         </Divider>
         
-        <Stack spacing={1} sx={{ mb: 2 }}>
+        <Stack spacing={1} sx={{ mb: { xs: 1, sm: 2 } }}> {/* Réduire la marge bottom sur mobile */}
           <Box sx={{ 
-            p: 2, 
+            p: { xs: 1.5, sm: 2 }, // Réduire le padding sur mobile
             bgcolor: theme.palette.grey[50], 
             borderRadius: 2,
             border: `1px solid ${theme.palette.grey[200]}`

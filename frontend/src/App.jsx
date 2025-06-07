@@ -70,6 +70,7 @@ function App() {
                 <Route path="/statistics" element={<StatisticsPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/presta-orders" element={<PrestaOrdersPage />} />
+                <Route path="/scores" element={<TableDesScoresPage />} />
                 <Route path="/profile" element={<div>Page de profil (à implémenter)</div>} />
                 <Route path="/settings" element={<div>Page de paramètres (à implémenter)</div>} />
               </Route>
